@@ -9,12 +9,12 @@ git-personal() {
 		return 1
 	fi
 	
-	git config --local user.name "YannickHerrero"
-	git config --local user.email "yannick.herrero@proton.me"
+	git config --local user.name "Chibdanam"
+	git config --local user.email "chibdanam@gmail.com"
 	
 	echo "Git personal account configured for: $(basename "$git_root")"
-	echo "  Name:  YannickHerrero"
-	echo "  Email: yannick.herrero@proton.me"
+	echo "  Name:  Chibdanam"
+	echo "  Email: chibdanam@gmail.com" 
 }
 
 # Shorter alias for git-personal
