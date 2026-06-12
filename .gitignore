@@ -1,3 +1,10 @@
+# Machine-local secrets — never commit real tokens / API keys
+config/zsh/.secrets.zsh
+config/zsh/secrets.zsh
+.env
+.env.*
+*.local
+
 # Generated theme files (created by set-theme)
 config/nvim/lua/theme-colors.lua
 
