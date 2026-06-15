@@ -1,9 +1,54 @@
 #!/usr/bin/env bash
-# Tmux sessionizer - select a project under ~/dev (or ~/dev/peren) and
-# attach/create its session. Usable both as a standalone command (zsh `f`)
-# and from a tmux popup (prefix + j); when run inside tmux it switches the
-# client, otherwise it attaches.
+# Tmux sessionizer - select a project and attach/create its session. Usable
+# both as a standalone command (zsh `f`) and from a tmux popup (prefix + j);
+# when run inside tmux it switches the client, otherwise it attaches.
+#
+# Search roots: ~/dev is always listed. Extra roots -- for monorepos whose
+# projects live in nested folders -- are read from
+# ~/.config/zsh/fuzzy-dir.local.txt (one path per line; '#' comments and blank
+# lines ignored). Dot-folders and git-ignored paths (bin/, obj/, node_modules/,
+# ...) are pruned automatically. See config/zsh/fuzzy-dir.example.txt.
 set -euo pipefail
+
+roots_file="${ZDOTDIR:-$HOME/.config/zsh}/fuzzy-dir.local.txt"
+
+# ~/dev is always searched; append any extra roots from the local file.
+roots=("$HOME/dev")
+if [ -r "$roots_file" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+        line="${line%%#*}"                      # strip inline / full-line comments
+        line="${line//[[:space:]]/}"            # strip surrounding whitespace
+        [ -z "$line" ] && continue
+        case "$line" in
+            "~/"*) line="$HOME/${line#\~/}" ;;   # expand a leading ~/
+            /*)    ;;                             # absolute path, keep as-is
+            *)     line="$HOME/$line" ;;          # otherwise relative to $HOME
+        esac
+        roots+=("${line%/}")                     # drop any trailing slash
+    done < "$roots_file"
+fi
+
+# Immediate subdirectories of every root, with dot-folders and git-ignored
+# paths (bin/, obj/, node_modules/, ...) pruned, printed ~/dev-relative (so
+# ~/dev/peren/foo -> "peren/foo"), de-duplicated, filesystem order preserved.
+gather_dirs() {
+    local root dirs ignored
+    for root in "${roots[@]}"; do
+        [ -d "$root" ] || continue
+        dirs=$(find "$root" -mindepth 1 -maxdepth 1 -type d -not -name '.*' -printf '%p\n' 2>/dev/null) || true
+        if [ -z "$dirs" ]; then
+            continue
+        fi
+        # Drop anything git ignores, but only when the root is inside a repo.
+        if git -C "$root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+            ignored=$(printf '%s\n' "$dirs" | git -C "$root" check-ignore --stdin 2>/dev/null || true)
+            if [ -n "$ignored" ]; then
+                dirs=$(printf '%s\n' "$dirs" | grep -vxF -f <(printf '%s\n' "$ignored") || true)
+            fi
+        fi
+        printf '%s\n' "$dirs"
+    done | sed "s|^$HOME/dev/||" | awk 'NF && !seen[$0]++'
+}
 
 # Map each project session to when it was last attached so projects with an
 # open (or most recently focused) session float to the top; everything else
@@ -13,8 +58,7 @@ sessions=$(tmux list-sessions -F '#{session_name} #{session_last_attached}' 2>/d
 current=""
 [ -n "${TMUX:-}" ] && current=$(tmux display-message -p '#{session_name}' 2>/dev/null || true)
 
-dir=$(find "$HOME/dev" "$HOME/dev/peren" -mindepth 1 -maxdepth 1 -type d -printf '%p\n' 2>/dev/null | \
-    sed "s|^$HOME/dev/||" | \
+dir=$(gather_dirs | \
     awk -v sess="$sessions" -v cur="$current" '
         BEGIN {
             n = split(sess, lines, "\n")
@@ -35,8 +79,10 @@ dir=$(find "$HOME/dev" "$HOME/dev/peren" -mindepth 1 -maxdepth 1 -type d -printf
 
 [ -z "$dir" ] && exit 0
 
-# Session name is the project's basename (so ~/dev/peren/foo -> "foo").
+# Session name is the project's basename, made tmux-safe (so ~/dev/peren/foo
+# -> "foo"; dots and colons -- special in tmux targets -- become underscores).
 session_name="${dir##*/}"
+session_name="${session_name//[.:]/_}"
 project_path="$HOME/dev/$dir"
 
 if ! tmux has-session -t "$session_name" 2>/dev/null; then

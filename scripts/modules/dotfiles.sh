@@ -35,6 +35,16 @@ copy_dotfiles() {
     # Clean up any leftovers from the pre-XDG layout.
     rm -f "$HOME/.zshrc"
     rm -rf "$HOME/.zsh"
+
+    # Monorepo search roots for f(): seeded once from the template, then left
+    # alone forever so machine-local edits survive every install/sync.
+    local fuzzy_roots="$HOME/.config/zsh/fuzzy-dir.local.txt"
+    if [ ! -e "$fuzzy_roots" ]; then
+        cp "$DOTFILES_DIR/config/zsh/fuzzy-dir.example.txt" "$fuzzy_roots"
+        echo "  - Seeded $fuzzy_roots (edit to add monorepo roots)"
+    else
+        echo "  - Kept existing $fuzzy_roots"
+    fi
     
     # Copy tmux config
     echo "  - Tmux config"

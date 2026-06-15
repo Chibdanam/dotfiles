@@ -1,0 +1,19 @@
+# f() tmux sessionizer — extra search roots (read by config/tmux/sessionizer.sh,
+# the picker shared by the `f` command and the `prefix + j` tmux popup).
+#
+# f() ALWAYS lists the immediate subdirectories of ~/dev (that default root is
+# baked into the script). List one EXTRA root per line here and f() will also
+# list each root's immediate subdirectories — meant for monorepos whose
+# projects live in nested folders, so you can jump straight to an inner project.
+#
+# Format:
+#   - one path per line, relative to $HOME and under ~/dev (e.g. dev/peren/CMS)
+#   - blank lines and lines starting with # are ignored
+#   - inline "# comments" and trailing slashes are fine
+#
+# Dot-folders and git-ignored paths (bin/, obj/, node_modules/, ...) are pruned
+# automatically, so you only list the roots, not the things to skip.
+#
+# On install this template is copied to ~/.config/zsh/fuzzy-dir.local.txt only
+# when that file does not yet exist; it is never overwritten afterwards, so your
+# machine-local edits are safe. The live file is git-ignored.
