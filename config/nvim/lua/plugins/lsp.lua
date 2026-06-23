@@ -36,6 +36,14 @@ return {
         capabilities = require("blink.cmp").get_lsp_capabilities(),
       })
 
+      -- Roslyn LS is installed as a dotnet global tool (see scripts/modules/dotnet.sh).
+      -- nvim-lspconfig's roslyn_ls auto-resolves the binary (roslyn-language-server on PATH).
+      -- Razor is added to filetypes because the upstream config defaults to { "cs" } only.
+      vim.lsp.config("roslyn_ls", {
+        filetypes = { "cs", "razor" },
+      })
+      vim.lsp.enable("roslyn_ls")
+
       vim.api.nvim_create_autocmd("LspAttach", {
         callback = function(event)
           local opts = { buffer = event.buf }

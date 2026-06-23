@@ -19,6 +19,7 @@ return {
         "css",
         "toml",
         "rust",
+        "c_sharp",
         -- injection targets referenced by the above grammars' queries
         "c",
         "comment",

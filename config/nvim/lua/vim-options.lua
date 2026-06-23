@@ -1,5 +1,8 @@
 vim.g.mapleader = " "
 
+-- Neovim core doesn't map .razor to filetype `razor`; needed for roslyn_ls to attach.
+vim.filetype.add({ extension = { razor = "razor" } })
+
 local opt = vim.opt
 
 if not vim.env.SSH_CONNECTION and vim.fn.has("clipboard") == 1 then
