@@ -12,6 +12,13 @@ newline = true
   background = "transparent"
   template = ""
   [[blocks.segments]]
+  type = "text"
+  style = "plain"
+  background = "transparent"
+  foreground = "#6c6c6c"
+  foreground_templates = ["{{ if .Root }}red{{ end }}"]
+  template = "{{ if .Env.WSL_DISTRO_NAME }}wsl{{ else }}{{ .HostName }}{{ end }} "
+  [[blocks.segments]]
   type = "path"
   style = "plain"
   background = "transparent"
