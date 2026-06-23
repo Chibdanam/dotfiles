@@ -18,6 +18,7 @@ return {
       rust = { "rustfmt", lsp_format = "fallback" },
       sh = { "shfmt" },
       bash = { "shfmt" },
+      cs = { "csharpier" },
     },
     format_on_save = {
       lsp_format = "fallback",

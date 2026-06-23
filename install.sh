@@ -66,6 +66,7 @@ declare -A MODULES=(
     ["mise"]="mise runtime manager"
     ["node"]="Node.js LTS, bun, pnpm, npm packages"
     ["rust"]="Rust toolchain via rustup"
+    ["dotnet"]=".NET SDK + Roslyn LS + csharpier (via mise)"
     ["tools"]="Additional tools (Claude Code, zoxide, delta, lazygit, gh, macchina)"
     ["claude"]="Claude Code global configuration and skills"
     ["ssh"]="SSH key generation"
@@ -74,7 +75,7 @@ declare -A MODULES=(
 )
 
 # Order for full install
-INSTALL_ORDER=(apt ssh zsh tmux herdr nvim mise node rust tools claude git dotfiles)
+INSTALL_ORDER=(apt ssh zsh tmux herdr nvim mise node rust dotnet tools claude git dotfiles)
 
 show_help() {
     echo "Dotfiles Bootstrap Script"
