@@ -24,7 +24,6 @@
       "Bash(git merge *)",
       "Bash(git stash *)",
       "Bash(git cherry-pick *)",
-
       "Bash(find *)",
       "Bash(ls *)",
       "Bash(tree *)",
@@ -32,7 +31,6 @@
       "Bash(stat *)",
       "Bash(du *)",
       "Bash(df *)",
-
       "Bash(cat *)",
       "Bash(head *)",
       "Bash(tail *)",
@@ -47,7 +45,6 @@
       "Bash(sed *)",
       "Bash(jq *)",
       "Bash(xargs *)",
-
       "Bash(which *)",
       "Bash(command *)",
       "Bash(type *)",
@@ -62,7 +59,6 @@
       "Bash(date *)",
       "Bash(echo *)",
       "Bash(printf *)",
-
       "Bash(node -e *)",
       "Bash(node --eval *)",
       "Bash(python -c *)",
@@ -71,12 +67,10 @@
       "Bash(npm view *)",
       "Bash(pnpm list *)",
       "Bash(pnpm view *)",
-
       "Bash(cargo check:*)",
       "Bash(cargo search:*)",
       "Bash(cargo build:*)",
       "Bash(cargo test:*)",
-
       "Bash(npx tsc *)"
     ],
     "ask": [
@@ -110,7 +104,7 @@
     ],
     "defaultMode": "acceptEdits"
   },
-  "autoUpdatesChannel": "stable",
+  "autoUpdatesChannel": "latest",
   "includeGitInstructions": true,
   "respectGitignore": true,
   "showTurnDuration": true,
@@ -119,5 +113,54 @@
     "type": "command",
     "command": "~/.claude/statusline.sh",
     "padding": 2
+  },
+  "effortLevel": "high",
+  "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -Command \"(New-Object Media.SoundPlayer 'C:\\Users\\MikaelCoin-Mansogo\\sounds\\wololo.wav').PlaySync()\" 2>/dev/null",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PermissionDenied": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -Command \"(New-Object Media.SoundPlayer 'C:\\Users\\MikaelCoin-Mansogo\\sounds\\quit-touchin-me.wav').PlaySync()\" 2>/dev/null",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -Command \"(New-Object Media.SoundPlayer 'C:\\Users\\MikaelCoin-Mansogo\\sounds\\start-the-game-already.wav').PlaySync()\" 2>/dev/null",
+            "async": true
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "roslyn-ls@local": true
+  },
+  "extraKnownMarketplaces": {
+    "local": {
+      "source": {
+        "source": "directory",
+        "path": "/home/mcma/dev/AIMarketplace/confero-marketplace"
+      }
+    }
   }
 }
