@@ -1,21 +1,85 @@
+onboarding = false
+
+# =============================================================================
 # herdr configuration
+# =============================================================================
 
 [keys]
+# Prefix (matches your tmux ctrl+a)
 prefix = "ctrl+a"
+
+# --- Splits (| = vertical divider, - = horizontal, matches tmux) ---
 split_vertical = "prefix+|"
 split_horizontal = "prefix+minus"
+
+# --- Direct vim-style pane focus, no prefix (matches tmux root C-hjkl) ---
 focus_pane_left = "ctrl+h"
 focus_pane_down = "ctrl+j"
 focus_pane_up = "ctrl+k"
 focus_pane_right = "ctrl+l"
+
+# --- (1) Pane resizing: replaces tmux `prefix+arrows`.
+# Enter resize mode, then use arrows/hjkl to resize, esc to exit.
+resize_mode = "prefix+r"
+
+# --- (4) Tabs: explicit binds matching tmux next/prev + numbered switch ---
+new_tab = "prefix+c"
+next_tab = "prefix+n"
+previous_tab = "prefix+p"
+switch_tab = "prefix+1..9"
+
+# --- (5) Git worktrees ---
+new_worktree = "prefix+shift+g"
+open_worktree = "prefix+shift+o"
+# remove_worktree left unbound (destructive; opens a confirmation when set)
+
+# --- Sidebar ---
 toggle_sidebar = "ctrl+b"
 
+# (4) Direct alt+1..9 tab switching — the closest port of your tmux M-1..5
+# muscle memory. Legacy-but-supported mechanism for prefix-less number jumps.
+[keys.indexed]
+tabs = "alt"
+
+# Space sessionizer (like tmux-sessionizer)
 [[keys.command]]
 key = "prefix+j"
 type = "pane"
 command = "~/.config/herdr/sessionizer.sh"
 description = "Herdr space sessionizer"
 
+# (5) Where `new_worktree` creates git worktrees
+[worktrees]
+directory = "~/.herdr/worktrees"
+
+[terminal]
+# New panes/tabs/spaces inherit the source pane's cwd
+# (matches your tmux `-c "#{pane_current_path}"` everywhere)
+new_cwd = "follow"
+
 [theme]
 name = "terminal"
 auto_switch = false
+
+# --- (2) Session persistence: the herdr analog to tmux-resurrect +
+# tmux-continuum. Restores agent panes into their native conversation
+# sessions after a server restart.
+[session]
+resume_agents_on_restore = true
+
+# --- (6) Sidebar / UI polish ---
+[ui]
+sidebar_width = 26
+# Order the agent panel as an attention queue (who needs input / finished)
+agent_panel_sort = "priority"
+# Show the detected agent (Claude, etc.) in split-pane borders
+show_agent_labels_on_pane_borders = true
+
+# --- (3) Agent notifications: know when a background agent finishes or
+# needs input. In-app toasts are the most reliable across WSL/SSH.
+[ui.toast]
+delivery = "herdr"
+
+[ui.sound]
+# Plays on agent state changes in background spaces (needs a working audio device)
+enabled = true

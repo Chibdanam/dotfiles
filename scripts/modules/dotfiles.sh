@@ -52,12 +52,14 @@ copy_dotfiles() {
     cp "$DOTFILES_DIR/config/tmux/sessionizer.sh" "$HOME/.config/tmux/sessionizer.sh"
     chmod +x "$HOME/.config/tmux/sessionizer.sh"
 
-    # Copy Herdr config
+    # Copy herdr config. herdr is the preferred multiplexer (f()); tmux above is
+    # kept as a fallback (tf()). Runtime state (session.json, *.sock, *.log) is
+    # left untouched — only the config.toml and sessionizer are versioned.
     echo "  - Herdr config"
     cp "$DOTFILES_DIR/config/herdr/config.toml" "$HOME/.config/herdr/config.toml"
     cp "$DOTFILES_DIR/config/herdr/sessionizer.sh" "$HOME/.config/herdr/sessionizer.sh"
     chmod +x "$HOME/.config/herdr/sessionizer.sh"
-    
+
     # Copy oh-my-posh config
     echo "  - Oh My Posh config"
     cp "$DOTFILES_DIR/config/ohmyposh/zen.toml" "$HOME/.config/ohmyposh/"

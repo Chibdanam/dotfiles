@@ -21,7 +21,7 @@ Install specific components:
 ./install.sh apt        # System dependencies (build-essential, curl, etc.)
 ./install.sh zsh        # Zsh + oh-my-posh
 ./install.sh tmux       # Tmux
-./install.sh herdr      # Herdr
+./install.sh herdr      # Herdr terminal workspace manager
 ./install.sh nvim       # Neovim
 ./install.sh mise       # mise runtime manager
 ./install.sh node       # Node.js LTS + bun + pnpm + npm packages
@@ -41,6 +41,8 @@ Or combine:
 
 Tmux and oh-my-posh intentionally inherit colors from the SSH client terminal.
 
+Herdr is the preferred terminal workspace manager (shell shortcut `f`); tmux is kept as a fallback (`tf`). The `herdr` module installs the binary from herdr.dev, and its config plus space sessionizer live in `config/herdr/` (copied by the `dotfiles` module). Runtime state (sockets, logs, `session.json`, worktrees) is intentionally not versioned.
+
 GitHub SSH setup is optional. Public bootstrap downloads use HTTPS by default so a fresh shell works before adding a GitHub SSH key.
 
 The `git` module reuses an existing global Git identity when `user.name` and `user.email` are already set, and asks for confirmation before keeping them.
@@ -58,7 +60,7 @@ The `claude` module installs user-scoped Claude Code configuration into `~/.clau
 | zsh | apt | Shell with zinit plugin manager |
 | oh-my-posh | curl | Prompt that inherits terminal colors |
 | tmux | apt | Terminal multiplexer with TPM |
-| herdr | curl | Terminal workspace manager |
+| herdr | curl | Terminal workspace manager (preferred; tmux kept as fallback) |
 
 #### Editor
 
@@ -126,7 +128,16 @@ The `claude` module installs user-scoped Claude Code configuration into `~/.clau
 #### Herdr (prefix: Ctrl+A)
 | Key | Action |
 |-----|--------|
-| `prefix + j` | Space sessionizer in a temporary pane (select `~/dev` project, focus/create space) |
+| `prefix + j` | Space sessionizer in a pane (select `~/dev` project, focus/create space) |
+| `prefix + \|` | Split vertical |
+| `prefix + -` | Split horizontal |
+| `Ctrl + h/j/k/l` | Focus pane left/down/up/right |
+| `prefix + r` | Resize mode (then arrows/hjkl, esc to exit) |
+| `prefix + c / n / p` | New / next / previous tab |
+| `prefix + 1..9` or `Alt + 1..9` | Switch to tab N |
+| `prefix + Shift + g` | New git worktree |
+| `prefix + Shift + o` | Open git worktree |
+| `Ctrl + b` | Toggle sidebar |
 
 #### Tmux (prefix: Ctrl+A)
 | Key | Action |
@@ -156,8 +167,8 @@ The `claude` module installs user-scoped Claude Code configuration into `~/.clau
 #### Zsh
 | Key | Action |
 |-----|--------|
-| `f` | Herdr space sessionizer (select `~/dev` project, focus/create space) |
-| `tf` | Tmux sessionizer (select project, create/attach session) |
+| `f` | Herdr space sessionizer (select `~/dev` project, focus/create space with Claude/run/vim tabs) |
+| `tf` | Tmux sessionizer (fallback; select project, create/attach session) |
 | `ff` | Fuzzy find files, open in nvim |
 | `z <dir>` | Smart cd with zoxide |
 
@@ -171,7 +182,7 @@ dotfiles/
 │   ├── claude/             # Claude Code global config and skills
 │   ├── nvim/               # Neovim config
 │   ├── ohmyposh/zen.toml   # Prompt theme
-│   ├── herdr/              # Herdr config and space sessionizer
+│   ├── herdr/              # Herdr config + space sessionizer
 │   ├── tmux/tmux.conf
 │   └── zsh/                # Zsh configs
 ├── scripts/

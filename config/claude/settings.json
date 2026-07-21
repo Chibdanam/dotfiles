@@ -1,9 +1,11 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "respectGitignore": true,
   "attribution": {
     "commit": "",
     "pr": ""
   },
+  "includeGitInstructions": true,
   "permissions": {
     "allow": [
       "Bash(git status *)",
@@ -73,6 +75,13 @@
       "Bash(cargo test:*)",
       "Bash(npx tsc *)"
     ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(./*.pem)",
+      "Read(./*.key)"
+    ],
     "ask": [
       "Bash(sudo *)",
       "Bash(docker *)",
@@ -92,68 +101,19 @@
       "Bash(rsync *)",
       "Bash(rm -rf *)",
       "Bash(rm -fr *)",
-      "Bash(curl *)",
       "Bash(wget *)"
     ],
-    "deny": [
-      "Read(./.env)",
-      "Read(./.env.*)",
-      "Read(./secrets/**)",
-      "Read(./*.pem)",
-      "Read(./*.key)"
-    ],
-    "defaultMode": "acceptEdits"
+    "defaultMode": "auto"
   },
-  "autoUpdatesChannel": "latest",
-  "includeGitInstructions": true,
-  "respectGitignore": true,
-  "showTurnDuration": true,
-  "spinnerTipsEnabled": false,
+  "model": "opus[1m]",
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline.sh",
     "padding": 2
   },
-  "effortLevel": "high",
-  "skipDangerousModePermissionPrompt": true,
-  "skipWorkflowUsageWarning": true,
-  "hooks": {
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell.exe -NoProfile -Command \"(New-Object Media.SoundPlayer 'C:\\Users\\MikaelCoin-Mansogo\\sounds\\wololo.wav').PlaySync()\" 2>/dev/null",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "PermissionDenied": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell.exe -NoProfile -Command \"(New-Object Media.SoundPlayer 'C:\\Users\\MikaelCoin-Mansogo\\sounds\\quit-touchin-me.wav').PlaySync()\" 2>/dev/null",
-            "async": true
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "powershell.exe -NoProfile -Command \"(New-Object Media.SoundPlayer 'C:\\Users\\MikaelCoin-Mansogo\\sounds\\start-the-game-already.wav').PlaySync()\" 2>/dev/null",
-            "async": true
-          }
-        ]
-      }
-    ]
-  },
   "enabledPlugins": {
-    "roslyn-ls@local": true
+    "roslyn-ls@local": true,
+    "claude-soundbox@claude-soundbox": true
   },
   "extraKnownMarketplaces": {
     "local": {
@@ -161,6 +121,19 @@
         "source": "directory",
         "path": "/home/mcma/dev/AIMarketplace/confero-marketplace"
       }
+    },
+    "claude-soundbox": {
+      "source": {
+        "source": "github",
+        "repo": "YannickHerrero/claude-soundbox"
+      }
     }
-  }
+  },
+  "spinnerTipsEnabled": false,
+  "effortLevel": "xhigh",
+  "autoUpdatesChannel": "latest",
+  "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
+  "theme": "auto",
+  "showTurnDuration": true
 }

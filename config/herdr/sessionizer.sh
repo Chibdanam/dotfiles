@@ -1,69 +1,70 @@
 #!/usr/bin/env bash
-# Herdr space sessionizer - select a project under ~/dev and focus/create a
-# matching Herdr workspace (space). Intended for the zsh `f` shortcut.
-set -euo pipefail
+# =============================================================================
+# herdr space sessionizer  (bound to prefix+j in config.toml)
+# =============================================================================
+# fzf picker over your project directories -> create-or-focus a herdr space,
+# named after the directory. Ported from a tmux-sessionizer workflow:
+#   - tmux "switch to existing session or create it"  ->  focus/create a space
+#   - runs in a temporary herdr pane (type = "pane"); the pane closes on exit.
+#
+# Pass a path as $1 to skip the picker and jump straight to that directory.
+#
+# Each root below is scanned ONE level deep, so listing a monorepo root
+# (e.g. ~/dev/peren) surfaces its subprojects as individually pickable spaces.
+# Add more roots to taste.
+# -----------------------------------------------------------------------------
 
-PROJECT_ROOTS=("$HOME/dev")
+set -uo pipefail
 
-existing_roots=()
-for root in "${PROJECT_ROOTS[@]}"; do
-    [ -d "$root" ] && existing_roots+=("$root")
-done
+SEARCH_DIRS=(
+  "$HOME/dev"          # top-level projects
+  "$HOME/dev/peren"    # monorepo: pick its subprojects directly (CMS, Demat, ...)
+)
 
-[ "${#existing_roots[@]}" -eq 0 ] && exit 0
+# Directory names to hide (build/storage output not caught by .gitignore).
+EXCLUDE='obj|bin|node_modules|__blobstorage__|__queuestorage__|AzurePipeline'
 
-project_path=$(find "${existing_roots[@]}" -mindepth 1 -maxdepth 1 -type d -printf '%p\n' 2>/dev/null | \
-    sort -u | \
-    fzf --preview 'eza --tree --level=1 --color=always {}' \
-        --bind 'ctrl-d:preview-half-page-down,ctrl-u:preview-half-page-up')
-
-[ -z "$project_path" ] && exit 0
-
-space_label="${project_path##*/}"
-
-ensure_herdr_server() {
-    if herdr status server >/dev/null 2>&1; then
-        return
+list_dirs() {
+  local root
+  for root in "${SEARCH_DIRS[@]}"; do
+    [[ -d "$root" ]] || continue
+    if command -v fd >/dev/null 2>&1; then
+      fd --exact-depth 1 --type d --absolute-path . "$root"
+    else
+      find "$root" -mindepth 1 -maxdepth 1 -type d
     fi
-
-    nohup herdr server >/tmp/herdr-sessionizer.log 2>&1 &
-
-    for _ in {1..50}; do
-        herdr status server >/dev/null 2>&1 && return
-        sleep 0.1
-    done
-
-    echo "Herdr server did not start. See /tmp/herdr-sessionizer.log" >&2
-    exit 1
+  done 2>/dev/null | grep -vEi "/($EXCLUDE)/?$" | sort -u
 }
 
-find_space_id() {
-    herdr workspace list 2>/dev/null | python3 -c '
-import json
-import sys
-
-label = sys.argv[1]
-try:
-    data = json.load(sys.stdin)
-except Exception:
-    sys.exit(0)
-
-for workspace in data.get("result", {}).get("workspaces", []):
-    if workspace.get("label") == label:
-        print(workspace.get("workspace_id", ""))
-        break
-' "$space_label"
-}
-
-ensure_herdr_server
-
-space_id=$(find_space_id)
-if [ -n "$space_id" ]; then
-    herdr workspace focus "$space_id" >/dev/null
+# --- pick a directory -------------------------------------------------------
+if [[ $# -ge 1 ]]; then
+  selected="$1"
 else
-    herdr workspace create --cwd "$project_path" --label "$space_label" --focus >/dev/null
+  selected="$(list_dirs | fzf --prompt='herdr space> ' --reverse --height=100% \
+                              --border --preview 'ls -la {}' --preview-window=right,40%)"
 fi
 
-if [ -z "${HERDR_ENV:-}" ]; then
-    exec herdr
+[[ -z "${selected:-}" ]] && exit 0          # picker cancelled -> do nothing
+selected="${selected%/}"
+if [[ ! -d "$selected" ]]; then
+  echo "Not a directory: $selected" >&2
+  sleep 1.5
+  exit 1
+fi
+
+# --- derive the space label (tmux-sessionizer style) ------------------------
+name="$(basename "$selected" | tr ' .' '__')"
+
+# --- create-or-focus --------------------------------------------------------
+existing=""
+if command -v jq >/dev/null 2>&1; then
+  existing="$(herdr workspace list 2>/dev/null \
+    | jq -r --arg n "$name" '.result.workspaces[]? | select(.label==$n) | .workspace_id' \
+    | head -n1)"
+fi
+
+if [[ -n "$existing" ]]; then
+  herdr workspace focus "$existing" >/dev/null 2>&1
+else
+  herdr workspace create --cwd "$selected" --label "$name" --focus >/dev/null 2>&1
 fi
