@@ -19,3 +19,8 @@ git-personal() {
 
 # Shorter alias for git-personal
 alias gsp='git-personal'
+
+# Redirect a command's `git config --global` writes to ~/.gitconfig.local, which
+# install.sh never overwrites.  e.g. git-local gh auth setup-git
+# Never export GIT_CONFIG_GLOBAL: it replaces ~/.gitconfig instead of adding to it.
+git-local() { GIT_CONFIG_GLOBAL="$HOME/.gitconfig.local" "$@"; }

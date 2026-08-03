@@ -51,6 +51,13 @@ setup_git() {
     git config --file "$git_local" user.name "$git_name"
     git config --file "$git_local" user.email "$git_email"
 
+    # gh's helper path embeds the gh version, so refresh it here rather than
+    # version it. GIT_CONFIG_GLOBAL sends gh's --global writes to the local file.
+    if command -v gh &> /dev/null && gh auth status &> /dev/null; then
+        GIT_CONFIG_GLOBAL="$git_local" gh auth setup-git
+        echo "  - Refreshed gh credential helpers in $git_local"
+    fi
+
     # Create global gitignore if it doesn't exist
     if [[ ! -f "$HOME/.gitignore" ]]; then
         cat > "$HOME/.gitignore" << 'EOF'
