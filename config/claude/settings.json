@@ -8,6 +8,7 @@
   "includeGitInstructions": true,
   "permissions": {
     "allow": [
+      "Bash(docker *)",
       "Bash(git status *)",
       "Bash(git diff *)",
       "Bash(git log *)",
@@ -19,7 +20,6 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git commit:*)",
-      "Bash(git push *)",
       "Bash(git pull *)",
       "Bash(git fetch *)",
       "Bash(git rebase *)",
@@ -83,8 +83,8 @@
       "Read(./*.key)"
     ],
     "ask": [
+      "Bash(git push *)",
       "Bash(sudo *)",
-      "Bash(docker *)",
       "Bash(docker-compose *)",
       "Bash(kubectl *)",
       "Bash(terraform *)",
@@ -105,7 +105,6 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "opus[1m]",
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline.sh",

@@ -5,8 +5,9 @@ set -euo pipefail
 install_nvim() {
     echo "Installing Neovim from GitHub releases..."
 
-    # Remove apt-installed neovim to avoid PATH conflicts
-    if dpkg -l neovim &>/dev/null; then
+    # Remove apt-installed neovim to avoid PATH conflicts.
+    # -s not -l: dpkg -l exits 0 even for never-installed packages.
+    if dpkg -s neovim &>/dev/null; then
         echo "Removing apt-installed neovim..."
         sudo apt remove -y neovim
     fi

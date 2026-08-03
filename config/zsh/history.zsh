@@ -1,7 +1,6 @@
 HISTSIZE=5000
 HISTFILE=~/.zsh_history
 SAVEHIST=$HISTSIZE
-HISTDUP=erase
 
 setopt appendhistory
 setopt sharehistory
@@ -14,5 +13,10 @@ setopt hist_find_no_dups
 autoload -Uz history-search-end
 zle -N history-beginning-search-backward-end history-search-end
 zle -N history-beginning-search-forward-end history-search-end
-bindkey "$terminfo[kcuu1]" history-beginning-search-backward-end
-bindkey "$terminfo[kcud1]" history-beginning-search-forward-end
+# Guarded: under a bare TERM these are empty and bindkey errors out.
+if [[ -n ${terminfo[kcuu1]} ]]; then
+    bindkey "${terminfo[kcuu1]}" history-beginning-search-backward-end
+fi
+if [[ -n ${terminfo[kcud1]} ]]; then
+    bindkey "${terminfo[kcud1]}" history-beginning-search-forward-end
+fi

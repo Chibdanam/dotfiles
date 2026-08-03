@@ -1,0 +1,17 @@
+# Machine-specific git config — not versioned, included from ~/.gitconfig.
+# Copied to ~/.gitconfig.local on first install, then never overwritten.
+#
+# Identity is filled in by scripts/modules/git.sh. Credential helpers are
+# per machine: the gh path below embeds the mise-installed version, so it
+# differs from box to box and goes stale when gh is upgraded. Regenerate with:
+#     gh auth setup-git
+[user]
+	name =
+	email =
+
+# [credential "https://github.com"]
+# 	helper =
+# 	helper = !/path/to/gh auth git-credential
+# [credential "https://gist.github.com"]
+# 	helper =
+# 	helper = !/path/to/gh auth git-credential

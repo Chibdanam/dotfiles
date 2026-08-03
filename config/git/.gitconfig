@@ -5,6 +5,7 @@
   amend = commit --amend --no-edit
   undo = reset --soft HEAD~1
   wip = !git add -A && git commit -m "WIP"
+  defaultBranch = !git remote show origin | sed -n '/HEAD branch/s/.*: //p'
 [core]
   editor = nvim
   pager = delta
@@ -32,9 +33,6 @@
   prompt = false
 [mergetool "nvimdiff"]
   layout = "LOCAL,BASE,REMOTE / MERGED"
-[credential "https://github.com"]
-	helper =
-	helper = !/home/mcma/.local/share/mise/installs/gh/2.92.0/gh_2.92.0_linux_amd64/bin/gh auth git-credential
-[credential "https://gist.github.com"]
-	helper =
-	helper = !/home/mcma/.local/share/mise/installs/gh/2.92.0/gh_2.92.0_linux_amd64/bin/gh auth git-credential
+# Identity and credential helpers: per machine, seeded by scripts/modules/git.sh
+[include]
+	path = ~/.gitconfig.local

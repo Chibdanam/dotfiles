@@ -157,7 +157,8 @@ main() {
     
     # Install specific modules
     for module in "$@"; do
-        if [[ -z "${MODULES[$module]}" ]]; then
+        # :- because set -u aborts on a missing key before this message prints
+        if [[ -z "${MODULES[$module]:-}" ]]; then
             print_error "Unknown module: $module"
             echo "Run './install.sh --help' for available modules"
             exit 1

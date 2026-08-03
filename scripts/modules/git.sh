@@ -20,6 +20,15 @@ setup_git() {
     # Copy gitconfig
     cp "$DOTFILES_DIR/config/git/.gitconfig" "$HOME/.gitconfig"
 
+    # Machine-local identity and credential helpers: seeded once, then left alone.
+    local git_local="$HOME/.gitconfig.local"
+    if [ ! -e "$git_local" ]; then
+        cp "$DOTFILES_DIR/config/git/gitconfig.local.example" "$git_local"
+        echo "  - Seeded $git_local"
+    else
+        echo "  - Kept existing $git_local"
+    fi
+
     # Prompt for user identity
     if [[ -n "$current_git_name" && -n "$current_git_email" ]]; then
         echo "Current git identity:"
@@ -38,8 +47,9 @@ setup_git() {
         read -rp "Git user email: " git_email
     fi
 
-    git config --global user.name "$git_name"
-    git config --global user.email "$git_email"
+    # --file, not --global: ~/.gitconfig is overwritten by every install
+    git config --file "$git_local" user.name "$git_name"
+    git config --file "$git_local" user.email "$git_email"
 
     # Create global gitignore if it doesn't exist
     if [[ ! -f "$HOME/.gitignore" ]]; then
