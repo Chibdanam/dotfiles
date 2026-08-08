@@ -28,45 +28,34 @@ install_dotnet() {
 
     # Install the .NET SDK via mise's core dotnet backend (uses Microsoft's
     # official install script under the hood, full SDK).
-    # Seed the version only once: `use @latest` would overwrite a pin like "10".
-    local pinned_dotnet
-    pinned_dotnet="$(mise config get tools.dotnet 2>/dev/null || true)"
-    if [[ -n "$pinned_dotnet" ]]; then
-        echo "Keeping the existing mise pin dotnet@$pinned_dotnet"
-        mise install dotnet
-    else
-        echo "Installing .NET SDK..."
-        mise use --global dotnet@latest
-    fi
+    echo "Installing .NET SDK..."
+    mise use --global dotnet@latest
 
-    # NuGet package ids, also what `dotnet tool list` prints in column 1.
-    # The backend lists prereleases, which roslyn-language-server needs (all
-    # its nuget.org builds are prerelease) — but only on a current mise;
-    # older releases queried NuGet with prerelease=false and failed with
-    # "Tool roslyn-language-server not found" (hence the update in mise.sh).
-    local -a dotnet_tools=(
-        roslyn-language-server
-        csharpier
-        dotnet-ef
-        ilspycmd
-        microsoft.sqlpackage
-        powershell
-    )
+    # Install roslyn-language-server; all its nuget.org builds are prerelease,
+    # which needs a current mise (older releases queried NuGet with
+    # prerelease=false and failed — hence the update in mise.sh).
+    echo "Installing roslyn-language-server..."
+    mise use --global dotnet:roslyn-language-server@latest
 
-    local tool
-    for tool in "${dotnet_tools[@]}"; do
-        echo "Installing $tool via mise..."
-        mise use --global "dotnet:$tool@latest"
-    done
+    # Install csharpier
+    echo "Installing csharpier..."
+    mise use --global dotnet:csharpier@latest
 
-    # Drop leftovers from the old `dotnet tool install --global` layout: mise
-    # comes first on PATH, so they'd be shadowed and never upgraded.
-    for tool in "${dotnet_tools[@]}"; do
-        if mise exec -- dotnet tool list --global | awk '{print $1}' | grep -qx "$tool"; then
-            echo "Removing the superseded global dotnet tool $tool..."
-            mise exec -- dotnet tool uninstall --global "$tool"
-        fi
-    done
+    # Install dotnet-ef
+    echo "Installing dotnet-ef..."
+    mise use --global dotnet:dotnet-ef@latest
+
+    # Install ilspycmd
+    echo "Installing ilspycmd..."
+    mise use --global dotnet:ilspycmd@latest
+
+    # Install sqlpackage
+    echo "Installing microsoft.sqlpackage..."
+    mise use --global dotnet:microsoft.sqlpackage@latest
+
+    # Install powershell
+    echo "Installing powershell..."
+    mise use --global dotnet:powershell@latest
 
     add_notice "Open a new shell so mise puts the .NET global tools on PATH (Neovim's roslyn_ls and conform.nvim resolve them from there)."
 
