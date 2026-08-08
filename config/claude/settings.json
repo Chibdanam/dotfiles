@@ -101,7 +101,7 @@
       "Bash(rm -fr *)",
       "Bash(wget *)"
     ],
-    "defaultMode": "acceptEdits"
+    "defaultMode": "auto"
   },
   "statusLine": {
     "type": "command",
