@@ -47,7 +47,23 @@ GitHub SSH setup is optional. Public bootstrap downloads use HTTPS by default so
 
 The `git` module reuses an existing global Git identity when `user.name` and `user.email` are already set, and asks for confirmation before keeping them.
 
-The `claude` module installs user-scoped Claude Code configuration into `~/.claude/`. The default settings disable Claude attribution in commits and pull requests, allow common Git workflows without prompts, ask for approval on higher-risk commands, and block a few dangerous patterns outright.
+The `claude` module installs user-scoped Claude Code configuration into `~/.claude/`. The default settings disable Claude attribution in commits and pull requests, allow common Git workflows without prompts, ask for approval on higher-risk commands, and block a few dangerous patterns outright. The tracked `settings.json` is the shared baseline; the installed `~/.claude/settings.json` is **generated** by merging it with `~/.claude/settings.local.json` (see below) — put durable machine preferences in the local file, not in the generated one, or the next install loses them (this includes defaults saved by `/effort`, `/model`, `/config`).
+
+## Machine-local configuration
+
+One branch serves every machine. Tracked config files are overwritten on each install; anything that differs per machine lives in an untracked local file that is seeded once from a template and never overwritten afterwards.
+
+| Live file | Purpose | Template | Seeded by |
+|-----------|---------|----------|-----------|
+| `~/.gitconfig.local` | git identity, gh credential helpers, `[personal]` identity for `gsp` | `config/git/gitconfig.local.example` | `git` module (seed-once) |
+| `~/.claude/settings.local.json` | machine Claude policy: git push / docker / curl rules, `defaultMode`, plugins, marketplaces | `config/claude/settings.local.example.json` | `claude` module (seed-once) |
+| `~/.claude/CLAUDE.local.md` | machine Claude instructions (push policy), imported by `CLAUDE.md` | `config/claude/CLAUDE.local.example.md` | `claude` module (seed-once) |
+| `~/.config/zsh/fuzzy-dir.local.txt` | extra sessionizer roots (herdr `f` and tmux `tf`, both `prefix + j` binds) | `config/zsh/fuzzy-dir.example.txt` | `dotfiles` module (seed-once) |
+| `~/.config/zsh/.secrets.zsh` | tokens / API keys | `config/zsh/secrets.zsh.example` | manual (`cp` + `chmod 600`) |
+| `~/.config/mise/config.toml` | mise tool pins, incl. extra work-only dotnet tools | — | `mise use --global` (manual) |
+| `~/.config/zsh/*.zsh` (any extra file) | free-form machine-local zsh — auto-sourced by the `.zshrc` glob, never deleted by installs | — | manual |
+
+Permission-rule merging: local `allow`/`ask`/`deny` arrays union with the baseline, and a rule promoted to `allow` locally is dropped from the baseline `ask` list. Scalar keys from the local file win. Rules deliberately absent from the baseline (`Bash(git push *)`, `Bash(docker *)`, `Bash(curl *)`) fall back to prompting until a machine takes a stance in its local file.
 
 ## What's Included
 
