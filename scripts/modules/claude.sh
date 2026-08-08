@@ -39,6 +39,16 @@ install_claude_config() {
     fi
 
     cp "$SOURCE_DIR/CLAUDE.md" "$TARGET_DIR/CLAUDE.md"
+
+    # CLAUDE.md ends with an @import of this file, so it must always exist;
+    # machine push policy (and any other local instructions) live here.
+    local claude_local="$TARGET_DIR/CLAUDE.local.md"
+    if [[ ! -e "$claude_local" ]]; then
+        cp "$SOURCE_DIR/CLAUDE.local.example.md" "$claude_local"
+        echo "  - Seeded $claude_local (edit for machine instructions)"
+    else
+        echo "  - Kept existing $claude_local"
+    fi
     cp "$SOURCE_DIR/statusline.sh" "$TARGET_DIR/statusline.sh"
     chmod +x "$TARGET_DIR/statusline.sh"
 

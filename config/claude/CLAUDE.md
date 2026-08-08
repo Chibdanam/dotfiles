@@ -8,4 +8,6 @@ Never chain commands with `&&`, `||`, or `;` in a single Bash tool call. Use sep
 
 - After completing a logical unit of work, commit with atomic, scoped commits (not one giant commit)
 - Split into small and independant atomic commits. Keep concise description
-- Never push to origin after committing unless told otherwise
+- Preserve correct git authorship; verify `git config user.email` matches the repo's expected author before committing
+
+@~/.claude/CLAUDE.local.md
