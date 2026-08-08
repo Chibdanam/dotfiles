@@ -40,7 +40,10 @@ install_dotnet() {
     fi
 
     # NuGet package ids, also what `dotnet tool list` prints in column 1.
-    # The backend lists prereleases, which roslyn-language-server needs.
+    # The backend lists prereleases, which roslyn-language-server needs (all
+    # its nuget.org builds are prerelease) — but only on a current mise;
+    # older releases queried NuGet with prerelease=false and failed with
+    # "Tool roslyn-language-server not found" (hence the update in mise.sh).
     local -a dotnet_tools=(
         roslyn-language-server
         csharpier
