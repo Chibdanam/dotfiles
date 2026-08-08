@@ -27,14 +27,6 @@ install_node() {
     echo "Installing pnpm..."
     mise use --global npm:pnpm@latest
     
-    # Install global packages
-    if ! command -v eas &> /dev/null; then
-        echo "Installing eas-cli..."
-        mise exec -- npm install -g eas-cli
-    else
-        echo "eas-cli already installed"
-    fi
-
     # tree-sitter CLI is required by nvim-treesitter v1 (main branch)
     # to build parsers from the grammars declared in lua/plugins/treesitter.lua.
     if ! command -v tree-sitter &> /dev/null; then

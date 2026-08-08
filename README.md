@@ -98,7 +98,6 @@ Permission-rule merging: local `allow`/`ask`/`deny` arrays union with the baseli
 | Node.js LTS | mise | JavaScript runtime |
 | bun | mise | JavaScript runtime/bundler |
 | pnpm | mise | Fast package manager |
-| eas-cli | npm | Expo Application Services |
 | tree-sitter-cli | npm | Parser builder for nvim-treesitter v1 |
 
 #### CLI Tools
