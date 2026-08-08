@@ -12,5 +12,4 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("vim-options")
-require("tridactyl")
 require("lazy").setup("plugins")

@@ -1,4 +1,0 @@
-" Load the WSL nvim integration on every Tridactyl startup.
-" `composite ...; ...` keeps the default startup behaviour intact while also
-" running our editorcmd override. `source_quiet` avoids errors if files move.
-autocmd TriStart .* composite source_quiet; js -r wsl-integration.js
