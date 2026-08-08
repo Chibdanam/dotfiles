@@ -9,31 +9,53 @@
 #
 # Pass a path as $1 to skip the picker and jump straight to that directory.
 #
-# Each root below is scanned ONE level deep, so listing a monorepo root
-# (e.g. ~/dev/peren) surfaces its subprojects as individually pickable spaces.
-# Add more roots to taste.
+# Search roots: ~/dev is always listed. Extra roots -- for monorepos whose
+# projects live in nested folders -- are read from
+# ~/.config/zsh/fuzzy-dir.local.txt (one path per line; '#' comments and blank
+# lines ignored), the same file the tmux sessionizer uses. Each root is scanned
+# ONE level deep; dot-folders and git-ignored paths (bin/, obj/, node_modules/,
+# ...) are pruned automatically. See config/zsh/fuzzy-dir.example.txt.
 # -----------------------------------------------------------------------------
 
 set -uo pipefail
 
-SEARCH_DIRS=(
-  "$HOME/dev"          # top-level projects
-  "$HOME/dev/peren"    # monorepo: pick its subprojects directly (CMS, Demat, ...)
-)
+roots_file="${ZDOTDIR:-$HOME/.config/zsh}/fuzzy-dir.local.txt"
 
-# Directory names to hide (build/storage output not caught by .gitignore).
-EXCLUDE='obj|bin|node_modules|__blobstorage__|__queuestorage__|AzurePipeline'
+# ~/dev is always searched; append any extra roots from the local file.
+roots=("$HOME/dev")
+if [ -r "$roots_file" ]; then
+  while IFS= read -r line || [ -n "$line" ]; do
+    line="${line%%#*}"                      # strip inline / full-line comments
+    line="${line//[[:space:]]/}"            # strip surrounding whitespace
+    [ -z "$line" ] && continue
+    case "$line" in
+      "~/"*) line="$HOME/${line#\~/}" ;;    # expand a leading ~/
+      /*)    ;;                             # absolute path, keep as-is
+      *)     line="$HOME/$line" ;;          # otherwise relative to $HOME
+    esac
+    roots+=("${line%/}")                    # drop any trailing slash
+  done < "$roots_file"
+fi
 
+# Immediate subdirectories of every root (absolute paths), with dot-folders
+# and git-ignored paths (bin/, obj/, node_modules/, ...) pruned, de-duplicated.
 list_dirs() {
-  local root
-  for root in "${SEARCH_DIRS[@]}"; do
-    [[ -d "$root" ]] || continue
-    if command -v fd >/dev/null 2>&1; then
-      fd --exact-depth 1 --type d --absolute-path . "$root"
-    else
-      find "$root" -mindepth 1 -maxdepth 1 -type d
+  local root dirs ignored
+  for root in "${roots[@]}"; do
+    [ -d "$root" ] || continue
+    dirs=$(find "$root" -mindepth 1 -maxdepth 1 -type d -not -name '.*' -printf '%p\n' 2>/dev/null) || true
+    if [ -z "$dirs" ]; then
+      continue
     fi
-  done 2>/dev/null | grep -vEi "/($EXCLUDE)/?$" | sort -u
+    # Drop anything git ignores, but only when the root is inside a repo.
+    if git -C "$root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      ignored=$(printf '%s\n' "$dirs" | git -C "$root" check-ignore --stdin 2>/dev/null || true)
+      if [ -n "$ignored" ]; then
+        dirs=$(printf '%s\n' "$dirs" | grep -vxF -f <(printf '%s\n' "$ignored") || true)
+      fi
+    fi
+    printf '%s\n' "$dirs"
+  done | awk 'NF && !seen[$0]++'
 }
 
 # --- pick a directory -------------------------------------------------------

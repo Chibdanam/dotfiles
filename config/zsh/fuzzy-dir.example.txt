@@ -1,5 +1,6 @@
-# f() tmux sessionizer — extra search roots (read by config/tmux/sessionizer.sh,
-# the picker shared by the `f` command and the `prefix + j` tmux popup).
+# Sessionizer extra search roots — read by BOTH pickers:
+#   - config/tmux/sessionizer.sh  (`tf` command and the tmux `prefix + j` popup)
+#   - config/herdr/sessionizer.sh (`f` command and the herdr `prefix + j` pane)
 #
 # f() ALWAYS lists the immediate subdirectories of ~/dev (that default root is
 # baked into the script). List one EXTRA root per line here and f() will also
