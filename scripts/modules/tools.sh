@@ -56,20 +56,6 @@ install_tools() {
         echo "gh already installed"
     fi
 
-    # Install gh-notify extension (powers the snacks.dashboard Notifications section).
-    # Requires gh to be authenticated — `gh extension list` errors otherwise.
-    if mise exec -- gh auth status &>/dev/null; then
-        if ! mise exec -- gh extension list | grep -q "meiji163/gh-notify"; then
-            echo "Installing gh-notify extension..."
-            mise exec -- gh extension install meiji163/gh-notify
-        else
-            echo "gh-notify extension already installed"
-        fi
-    else
-        echo "Skipping gh-notify extension: gh CLI not authenticated yet."
-        add_notice "Run 'gh auth login' then './install.sh tools' to install the gh-notify extension (powers the snacks.dashboard Notifications section)."
-    fi
-
     # Install shell-color-scripts (provides `colorscript`, used by snacks.dashboard)
     if ! command -v colorscript &> /dev/null; then
         echo "Installing colorscript..."

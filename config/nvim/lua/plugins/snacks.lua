@@ -73,17 +73,6 @@ return {
           local in_git = Snacks.git.get_root() ~= nil
           local cmds = {
             {
-              title = "Notifications",
-              cmd = "gh notify -s -a -n5 | grep . || echo 'No new notifications'",
-              action = function()
-                vim.ui.open("https://github.com/notifications")
-              end,
-              key = "n",
-              icon = " ",
-              height = 5,
-              enabled = true,
-            },
-            {
               icon = " ",
               title = "Git Status",
               cmd = "git --no-pager diff --stat -B -M -C | grep . || echo 'Working tree clean'",

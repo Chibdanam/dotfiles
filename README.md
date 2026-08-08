@@ -110,7 +110,6 @@ Permission-rule merging: local `allow`/`ask`/`deny` arrays union with the baseli
 | delta | mise | Git diff viewer |
 | lazygit | mise | Git TUI |
 | gh | mise | GitHub CLI |
-| gh-notify | gh ext | GitHub notifications inbox (used by snacks dashboard) |
 | colorscript | git/make | shell-color-scripts; decorative blocks in snacks dashboard |
 | macchina | cargo | Rust-based system info fetch (aliased to `fetch`) |
 | fzf | apt | Fuzzy finder |
@@ -220,10 +219,7 @@ Every module is idempotent — already-installed tools are detected via
 configs before copying so removing a plugin upstream actually
 removes it from `~/.config/nvim`.
 
-`gh auth login` is interactive and must be run manually; the
-`gh-notify` extension install in `tools.sh` is skipped (with an
-explanatory message) until then. Re-run `./install.sh tools` after
-authenticating.
+`gh auth login` is interactive and must be run manually.
 
 ## Requirements
 
