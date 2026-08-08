@@ -30,7 +30,13 @@ dev-project-dirs() {
 
 # herdr sessionizer (preferred): pick a project with fzf, then switch to (or
 # create) its herdr space with a Claude / run / vim tab layout.
+# Falls back to the tmux sessionizer on machines without herdr (or jq).
 f() {
+    if ! command -v herdr &>/dev/null || ! command -v jq &>/dev/null; then
+        tf
+        return
+    fi
+
     local dir
     dir=$(dev-project-dirs | fzf \
         --preview "eza --tree --level=1 --color=always $HOME/dev/{}" \
