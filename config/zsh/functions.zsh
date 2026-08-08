@@ -1,20 +1,33 @@
-# Set git to use personal account in current repository
-# Safe to run multiple times - will simply update the config
+# Set git to use the personal account in the current repository.
+# The identity is machine-local: [personal] name/email in ~/.gitconfig.local
+# (see config/git/gitconfig.local.example). Safe to run multiple times.
 git-personal() {
-	local git_root
+	local git_root name email
 	git_root=$(git rev-parse --show-toplevel 2>/dev/null)
-	
+
 	if [[ -z "$git_root" ]]; then
 		echo "Error: Not in a git repository"
 		return 1
 	fi
-	
-	git config --local user.name "Chibdanam"
-	git config --local user.email "chibdanam@gmail.com"
-	
+
+	name=$(git config --file "$HOME/.gitconfig.local" personal.name 2>/dev/null)
+	email=$(git config --file "$HOME/.gitconfig.local" personal.email 2>/dev/null)
+
+	if [[ -z "$name" || -z "$email" ]]; then
+		echo "Error: personal identity not configured"
+		echo "Add it to ~/.gitconfig.local:"
+		echo "  [personal]"
+		echo "  	name = Your Name"
+		echo "  	email = you@example.com"
+		return 1
+	fi
+
+	git config --local user.name "$name"
+	git config --local user.email "$email"
+
 	echo "Git personal account configured for: $(basename "$git_root")"
-	echo "  Name:  Chibdanam"
-	echo "  Email: chibdanam@gmail.com" 
+	echo "  Name:  $name"
+	echo "  Email: $email"
 }
 
 # Shorter alias for git-personal

@@ -5,3 +5,10 @@
 [user]
 	name =
 	email =
+
+# Identity applied per-repo by the `git-personal` / `gsp` shell function
+# (config/zsh/functions.zsh) — for personal repos on a work machine, or the
+# other way around. Leave empty if this machine has a single identity.
+# [personal]
+# 	name =
+# 	email =
