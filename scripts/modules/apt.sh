@@ -17,6 +17,7 @@ install_apt() {
         ripgrep \
         fd-find \
         fzf \
+        jq \
         bat \
         eza \
         python3 \
