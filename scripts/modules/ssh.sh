@@ -10,15 +10,9 @@ setup_ssh() {
 
     # Any existing keypair counts — key names vary per machine (e.g.
     # id_ed25519_github_wsl), so don't insist on the default id_ed25519.
-    local existing
-    existing=$(find "$HOME/.ssh" -maxdepth 1 -type f -name '*.pub' 2>/dev/null | sort)
-
-    if [[ -n "$existing" ]]; then
+    if ls "$HOME/.ssh"/*.pub &> /dev/null; then
         echo "SSH key(s) already present, skipping generation:"
-        local pub
-        while IFS= read -r pub; do
-            echo "  - $(basename "${pub%.pub}")"
-        done <<< "$existing"
+        ls "$HOME/.ssh"/*.pub
         return
     fi
 
