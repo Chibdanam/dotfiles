@@ -8,12 +8,22 @@ setup_ssh() {
     mkdir -p "$HOME/.ssh"
     chmod 700 "$HOME/.ssh"
 
-    if [[ -f "$HOME/.ssh/id_ed25519" ]]; then
-        echo "SSH key already exists, skipping generation"
-    else
-        read -rp "Email for SSH key: " ssh_email
-        ssh-keygen -t ed25519 -C "$ssh_email" -f "$HOME/.ssh/id_ed25519"
+    # Any existing keypair counts — key names vary per machine (e.g.
+    # id_ed25519_github_wsl), so don't insist on the default id_ed25519.
+    local existing
+    existing=$(find "$HOME/.ssh" -maxdepth 1 -type f -name '*.pub' 2>/dev/null | sort)
+
+    if [[ -n "$existing" ]]; then
+        echo "SSH key(s) already present, skipping generation:"
+        local pub
+        while IFS= read -r pub; do
+            echo "  - $(basename "${pub%.pub}")"
+        done <<< "$existing"
+        return
     fi
+
+    read -rp "Email for SSH key: " ssh_email
+    ssh-keygen -t ed25519 -C "$ssh_email" -f "$HOME/.ssh/id_ed25519"
 
     echo ""
     echo "Your public key (add to GitHub → Settings → SSH keys):"
