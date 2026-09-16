@@ -41,6 +41,8 @@ Or combine:
 
 Tmux and oh-my-posh intentionally inherit colors from the SSH client terminal.
 
+`init-vscode [repo]` (from `bin/`, on PATH after the `dotfiles` module) sets a .NET repository up for attach-debugging from VS Code: the apps keep starting from a terminal (`dotnet run`, mise) and VS Code only attaches. It writes `.vscode/running-apps.sh` and merges two "Attach" entries into `.vscode/launch.json`: a picker of the repo's running apps not yet debugged, labelled by project and naming the session after it, plus the C# extension's own process picker as a fallback. Re-running it is a no-op; it only refreshes what it marked as its own. It ends by checking what attaching depends on: `kernel.yama.ptrace_scope` must be 0 (Ubuntu ships 1, which makes every attach bind nothing) and the C# and Tasks Shell Input extensions must be installed on the WSL side.
+
 Herdr is the preferred terminal workspace manager (shell shortcut `f`); tmux is kept as a fallback (`tf`). The `herdr` module installs the binary from herdr.dev, and its config plus space sessionizer live in `config/herdr/` (copied by the `dotfiles` module). Runtime state (sockets, logs, `session.json`, worktrees) is intentionally not versioned.
 
 GitHub SSH setup is optional. Public bootstrap downloads use HTTPS by default so a fresh shell works before adding a GitHub SSH key.
