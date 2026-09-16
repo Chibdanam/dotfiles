@@ -1,0 +1,283 @@
+#!/bin/sh
+# init-vscode — VS Code attach-debugging for a .NET repository, idempotently.
+#
+# The apps are started outside VS Code (dotnet run, mise, a terminal); VS Code only
+# attaches. This drops into <repo>/.vscode:
+#   running-apps.sh   lists the apphosts running from the repo that no debugger is
+#                     attached to yet, labelled by project (feeds the picker)
+#   launch.json       two attach entries, merged into an existing file if any:
+#                     "Attach ${input:appName}"  picker of the repo's apps, session
+#                                                named after the project
+#                     "Attach (any process)"     the C# extension's own picker
+# Files are created when missing and refreshed when they carry the "managed by
+# init-vscode" marker; anything else in launch.json is left alone. Running it twice
+# changes nothing. It ends with the machine checks attaching depends on: the
+# kernel's ptrace scope and the two extensions (C#, Tasks Shell Input).
+
+MARKER="managed by init-vscode"
+
+usage() {
+    cat <<'USAGE'
+usage: init-vscode [-n|--dry-run] [repo]
+
+Set up VS Code attach-debugging for the .NET repository at <repo> (default: the
+current directory): .vscode/running-apps.sh and two "Attach" entries in
+.vscode/launch.json. Safe to re-run.
+
+  -n, --dry-run  report what would change without writing anything
+  -h, --help     show this help
+USAGE
+}
+
+dry=0
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -n | --dry-run) dry=1; shift ;;
+        -h | --help) usage; exit 0 ;;
+        --) shift; break ;;
+        -?*) echo "init-vscode: unknown option: $1" >&2; usage >&2; exit 2 ;;
+        *) break ;;
+    esac
+done
+repo=$(cd "${1:-.}" 2>/dev/null && pwd -P) || { echo "init-vscode: ${1:-.}: not a directory" >&2; exit 2; }
+
+if ! find "$repo" -maxdepth 3 \( -name '*.sln' -o -name '*.slnx' -o -name '*.csproj' \) -print -quit 2>/dev/null | grep -q .; then
+    echo "init-vscode: $repo: no .sln/.slnx/.csproj within three levels" >&2
+    exit 2
+fi
+command -v python3 >/dev/null || { echo "init-vscode: python3 is required to merge launch.json" >&2; exit 2; }
+
+vscode=$repo/.vscode
+[ "$dry" -eq 1 ] || mkdir -p "$vscode"
+
+# ---------------------------------------------------------------- running-apps.sh
+template=$(cat <<'TEMPLATE'
+#!/bin/sh
+# managed by init-vscode (dotfiles/bin/init-vscode) — re-run it to refresh.
+#
+# Picker feed for launch.json (Tasks Shell Input inputs appPid / appName).
+#
+#   running-apps.sh <folder>            one line per app running from <folder> that no
+#                                       debugger is attached to yet: <pid>|<Project>|pid <pid>
+#   running-apps.sh <folder> name <pid> the project of that pid, for the session name
+#
+# An app is an apphost whose path is <folder>/.../<Project>/bin/...; the project is
+# the directory holding bin/. A checkout nested in the folder (a git worktree, a
+# vendored repo: any parent of the project dir with a .git) is skipped, its PDBs do
+# not point at this window's files. An app counts as debugged when a process is
+# ptracing it (TracerPid) or when a vsdbg/vsdbg-ui of the C# extension holds its CLR
+# debug pipe (/tmp/clr-debug-pipe-<pid>-*) open.
+folder=$1
+
+# Prints the project of an apphost pid; fails for anything that is not an app of
+# this folder.
+project_of() {
+    exe=$(readlink "/proc/$1/exe" 2>/dev/null) || return 1
+    case $exe in "$folder"/*/bin/*) ;; *) return 1 ;; esac
+    rel=${exe#"$folder"/}
+    projdir=${rel%%/bin/*}
+    parents=${projdir%/*}
+    [ "$parents" = "$projdir" ] && parents=
+    prefix=$folder
+    oldifs=$IFS; IFS=/
+    for seg in $parents; do
+        prefix=$prefix/$seg
+        [ -e "$prefix/.git" ] && { IFS=$oldifs; return 1; }
+    done
+    IFS=$oldifs
+    printf '%s\n' "${projdir##*/}"
+}
+
+if [ "$2" = name ]; then
+    project_of "$3"
+    exit
+fi
+
+attached=$(
+    for dbg in $(pgrep -f '/\.debugger/vsdbg'); do
+        ls -l "/proc/$dbg/fd" 2>/dev/null
+    done | grep -oE 'clr-debug-pipe-[0-9]+' | cut -d- -f4 | sort -u | tr '\n' ' '
+)
+
+escaped=$(printf '%s' "$folder" | sed 's/[][\.*^$+?(){}|]/\\&/g')
+pgrep -f "^$escaped/.*/bin/" | while read -r pid; do
+    project=$(project_of "$pid") || continue
+    case " $attached " in *" $pid "*) continue ;; esac
+    tracer=$(awk '/^TracerPid:/{print $2}' "/proc/$pid/status" 2>/dev/null)
+    [ "${tracer:-0}" != 0 ] && continue
+    printf '%s|%s|pid %s\n' "$pid" "$project" "$pid"
+done | sort -t'|' -k2
+TEMPLATE
+)
+
+target=$vscode/running-apps.sh
+if [ ! -e "$target" ]; then
+    state=created
+elif [ "$(cat "$target")" = "$template" ]; then
+    state=unchanged
+elif grep -q "$MARKER" "$target"; then
+    state=updated
+else
+    state=foreign
+fi
+case $state in
+    created | updated)
+        if [ "$dry" -eq 0 ]; then
+            printf '%s\n' "$template" > "$target"
+            chmod +x "$target"
+        fi
+        echo "  running-apps.sh : $state" ;;
+    unchanged) echo "  running-apps.sh : unchanged" ;;
+    foreign)   echo "  running-apps.sh : left alone (not marked '$MARKER'; delete it to let init-vscode write its version)" ;;
+esac
+
+# --------------------------------------------------------------------- launch.json
+# JSONC in, JSON out: comments and trailing commas are accepted on read; when the
+# file has to be rewritten, its comments cannot be kept (a .bak is left beside it).
+DRY_RUN=$dry python3 - "$vscode/launch.json" "$MARKER" <<'PY'
+import json, os, re, sys
+
+path, marker = sys.argv[1], sys.argv[2]
+dry = os.environ.get("DRY_RUN") == "1"
+
+def strip_jsonc(text):
+    out, i, n = [], 0, len(text)
+    while i < n:
+        c = text[i]
+        if c == '"':
+            j = i + 1
+            while j < n and text[j] != '"':
+                j += 2 if text[j] == "\\" else 1
+            out.append(text[i:j + 1]); i = j + 1
+        elif text.startswith("//", i):
+            i = text.find("\n", i); i = n if i < 0 else i
+        elif text.startswith("/*", i):
+            i = text.find("*/", i + 2); i = n if i < 0 else i + 2
+        else:
+            out.append(c); i += 1
+    return re.sub(r",(\s*[}\]])", r"\1", "".join(out))
+
+inputs = [
+    {"id": "appPid", "type": "command", "command": "shellCommand.execute",
+     "args": {"command": "sh ${workspaceFolder}/.vscode/running-apps.sh ${workspaceFolder}",
+              "cwd": "${workspaceFolder}", "fieldSeparator": "|", "useFirstResult": False,
+              "description": "Running app of this folder, not debugged yet"}},
+    {"id": "appName", "type": "command", "command": "shellCommand.execute",
+     "args": {"command": "sh ${workspaceFolder}/.vscode/running-apps.sh ${workspaceFolder} name ${input:appPid}",
+              "cwd": "${workspaceFolder}", "useFirstResult": True}},
+]
+configs = [
+    {"type": "coreclr", "request": "attach", "processId": "${input:appPid}",
+     "name": "Attach ${input:appName}", "suppressMultipleSessionWarning": True},
+    {"name": "Attach (any process)", "type": "coreclr", "request": "attach",
+     "processId": "${command:pickProcess}"},
+]
+header = f"""\
+// {marker} (dotfiles/bin/init-vscode): the two "Attach" entries and the appPid/appName
+// inputs are refreshed by re-running it; everything else in this file is yours.
+//
+// The apps are started outside VS Code; VS Code only attaches. One session per pick,
+// run the entry again to add another app ("attach everything" = F5 + Enter per app).
+//
+// Attach <Project>: the list (running-apps.sh) holds only the apphosts running from
+//   this folder and not debugged yet, labelled by project; the session takes the
+//   project's name. appName reuses the appPid pick, which the Tasks Shell Input
+//   extension allows only for an input appearing EARLIER in the config: hence
+//   processId before name. Needs the community extension "Tasks Shell Input"
+//   (augustocdias.tasks-shell-input) installed where the code runs (in WSL).
+//   Cancelling the pick (Esc, or losing focus) makes VS Code report an unresolved
+//   input: harmless, not configurable.
+// Attach (any process): the C# extension's own picker, every process of the machine.
+//   Typing  bin/  in its filter keeps the apphosts. Never pick a `dotnet run` line:
+//   that is the SDK, attaching to it succeeds and binds nothing.
+//
+// Requirements:
+//  - kernel.yama.ptrace_scope = 0, or attaching binds nothing (breakpoints stay hollow).
+//  - after an edit, rebuild + restart the app: a breakpoint in a file newer than the
+//    running build stays unbound on purpose.
+//  - breakpoints bind on the absolute path baked into the PDB: an app built in a
+//    worktree is debugged from a window that contains that worktree.
+"""
+
+def merged_into(doc):
+    """Returns whether the document changed."""
+    changed = False
+    doc.setdefault("version", "0.2.0")
+    have = doc.setdefault("inputs", [])
+    for wanted in inputs:
+        cur = next((i for i in have if isinstance(i, dict) and i.get("id") == wanted["id"]), None)
+        if cur is None:
+            have.append(wanted); changed = True
+        elif cur != wanted:
+            have[have.index(cur)] = wanted; changed = True
+    have = doc.setdefault("configurations", [])
+    for wanted in configs:
+        cur = next((c for c in have if isinstance(c, dict) and c.get("name") == wanted["name"]), None)
+        if cur is None:
+            have.append(wanted); changed = True
+        elif cur != wanted:
+            have[have.index(cur)] = wanted; changed = True
+    return changed
+
+if not os.path.exists(path):
+    doc = {"version": "0.2.0", "inputs": [], "configurations": []}
+    merged_into(doc)
+    if not dry:
+        with open(path, "w") as f:
+            f.write(header + json.dumps(doc, indent=4) + "\n")
+    print("  launch.json     : created")
+    sys.exit(0)
+
+text = open(path).read()
+try:
+    doc = json.loads(strip_jsonc(text))
+except json.JSONDecodeError as e:
+    print(f"  launch.json     : left alone (cannot parse it: {e})"); sys.exit(1)
+if not isinstance(doc, dict):
+    print("  launch.json     : left alone (not an object)"); sys.exit(1)
+
+if not merged_into(doc):
+    print("  launch.json     : unchanged"); sys.exit(0)
+
+has_comments = re.search(r"^\s*//|/\*", text, re.M) is not None
+note = ""
+if has_comments and marker not in text:
+    if not dry:
+        with open(path + ".bak", "w") as f:
+            f.write(text)
+    note = " (its comments could not be kept; original saved as launch.json.bak)"
+if not dry:
+    with open(path, "w") as f:
+        f.write(header + json.dumps(doc, indent=4) + "\n")
+print(f"  launch.json     : updated{note}")
+PY
+
+# -------------------------------------------------------------------------- checks
+scope=$(cat /proc/sys/kernel/yama/ptrace_scope 2>/dev/null || echo 0)
+if [ "$scope" != 0 ]; then
+    cat <<MSG
+  ptrace_scope    : $scope — attaching to a process VS Code did not start will bind nothing.
+                    Fix (needs sudo, in a terminal):
+                      sudo sysctl -w kernel.yama.ptrace_scope=0
+                      echo 'kernel.yama.ptrace_scope = 0' | sudo tee /etc/sysctl.d/60-ptrace-scope.conf
+MSG
+else
+    echo "  ptrace_scope    : 0"
+fi
+
+has_ext() {
+    for d in "$HOME"/.vscode-server/extensions "$HOME"/.vscode-server-insiders/extensions "$HOME"/.vscode/extensions; do
+        [ -d "$d" ] && ls "$d" 2>/dev/null | grep -q "^$1-" && return 0
+    done
+    return 1
+}
+if has_ext ms-dotnettools.csharp; then echo "  C# extension    : installed"; else echo "  C# extension    : MISSING — install 'C#' (ms-dotnettools.csharp) in the WSL/remote host"; fi
+if has_ext augustocdias.tasks-shell-input; then echo "  Tasks Shell Input: installed"; else echo "  Tasks Shell Input: MISSING — install it from the Extensions view (Install in WSL); without it only 'Attach (any process)' works"; fi
+
+if git -C "$repo" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    if git -C "$repo" check-ignore -q .vscode/launch.json; then
+        echo "  git             : .vscode is ignored, nothing to commit"
+    else
+        echo "  git             : .vscode is tracked here — review and commit .vscode/ if wanted"
+    fi
+fi

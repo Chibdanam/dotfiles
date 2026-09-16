@@ -64,6 +64,13 @@ copy_dotfiles() {
     echo "  - Oh My Posh config"
     cp "$DOTFILES_DIR/config/ohmyposh/zen.toml" "$HOME/.config/ohmyposh/"
 
+    # init-vscode: VS Code attach-debugging for a .NET repo (.vscode/launch.json +
+    # running-apps.sh), idempotent. ~/.local/bin is already on PATH via .zshrc.
+    echo "  - Helper: init-vscode"
+    mkdir -p "$HOME/.local/bin"
+    cp "$DOTFILES_DIR/bin/init-vscode" "$HOME/.local/bin/init-vscode"
+    chmod +x "$HOME/.local/bin/init-vscode"
+
     # WSL-only integrations, skipped on a native Linux box where there's no
     # Windows side.
     if grep -qiE '(microsoft|wsl)' /proc/version 2>/dev/null; then
