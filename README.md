@@ -173,6 +173,7 @@ The `claude` module installs user-scoped Claude Code configuration into `~/.clau
 | `tf` | Tmux sessionizer (fallback; select project, create/attach session) |
 | `ff` | Fuzzy find files, open in nvim |
 | `z <dir>` | Smart cd with zoxide |
+| `update-all` | Run every updater (apt, mise, Claude Code, herdr, codegraph, rustup, snap, zinit, nvim plugins); a failing step doesn't stop the rest, the summary lists ok / skipped / failed |
 
 ### WSL Integration
 
