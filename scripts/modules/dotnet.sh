@@ -48,6 +48,8 @@ install_dotnet() {
         ilspycmd
         microsoft.sqlpackage
         powershell
+        # Azure Artifacts feeds auth; cased as the live mise config has it
+        Microsoft.Artifacts.CredentialProvider.NuGet.Tool
     )
 
     local tool

@@ -197,8 +197,10 @@ dotfiles/
 ├── install.sh              # Main install script
 ├── bin/                    # Helper executables, copied to ~/.local/bin
 ├── config/
-│   ├── git/.gitconfig
-│   ├── claude/             # Claude Code global config and skills
+│   ├── git/                # .gitconfig, global gitignore, .gitconfig.local template
+│   ├── claude/             # Claude Code global config, skills, commands, hooks
+│   ├── lazygit/config.yml
+│   ├── rtk/config.toml
 │   ├── nvim/               # Neovim config
 │   ├── ohmyposh/zen.toml   # Prompt theme
 │   ├── herdr/              # Herdr config + space sessionizer

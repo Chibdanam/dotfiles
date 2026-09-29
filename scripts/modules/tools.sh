@@ -34,6 +34,25 @@ install_tools() {
     echo "Installing lazygit..."
     mise use --global lazygit@latest
 
+    # Day-to-day CLIs from mise's registry. python and uv come first: mise
+    # installs pipx:* tools through uv.
+    local -a mise_tools=(
+        fd
+        jq
+        bottom
+        lazydocker
+        python
+        uv
+        npm:@usebruno/cli
+        npm:postman-cli
+        pipx:claude-swap
+    )
+    local tool
+    for tool in "${mise_tools[@]}"; do
+        echo "Installing $tool via mise..."
+        mise use --global "$tool@latest"
+    done
+
     # Install macchina (Rust-based system info fetch, aliased to `fetch`).
     # mise's registry doesn't include macchina; build from source via cargo.
     if ! command -v macchina &>/dev/null; then
