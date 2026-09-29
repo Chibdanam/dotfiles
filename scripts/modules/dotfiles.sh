@@ -31,6 +31,9 @@ copy_dotfiles() {
     echo "  - Zsh config"
     cp "$DOTFILES_DIR/config/zsh/.zshenv" "$HOME/.zshenv"
     cp "$DOTFILES_DIR/config/zsh/.zshrc" "$HOME/.config/zsh/.zshrc"
+    # Mirror the repo: .zshrc sources every *.zsh, so a file removed upstream
+    # would keep loading. The glob skips dotfiles, .secrets.zsh survives.
+    rm -f "$HOME/.config/zsh/"*.zsh
     cp "$DOTFILES_DIR/config/zsh/"*.zsh "$HOME/.config/zsh/"
     # Clean up any leftovers from the pre-XDG layout.
     rm -f "$HOME/.zshrc"
