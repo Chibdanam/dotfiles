@@ -16,6 +16,7 @@ copy_dotfiles() {
     mkdir -p "$HOME/.config/zsh"
     mkdir -p "$HOME/.config/lazygit"
     mkdir -p "$HOME/.config/rtk"
+    mkdir -p "$HOME/.config/opencode"
     mkdir -p "$HOME/dev"
     
     # Copy nvim config
@@ -75,6 +76,17 @@ copy_dotfiles() {
     # rtk's filters.toml is its own untouched template: only config.toml is ours
     echo "  - rtk config"
     cp "$DOTFILES_DIR/config/rtk/config.toml" "$HOME/.config/rtk/config.toml"
+
+    # opencode writes its own package.json/node_modules here: only the config
+    # is ours. It reads the DGX key from ~/.config/dgx/token and refuses to
+    # start if that file is missing, so seed an empty one (fill it by hand).
+    echo "  - opencode config"
+    cp "$DOTFILES_DIR/config/opencode/opencode.jsonc" "$HOME/.config/opencode/opencode.jsonc"
+    if [ ! -e "$HOME/.config/dgx/token" ]; then
+        mkdir -p "$HOME/.config/dgx"
+        install -m 600 /dev/null "$HOME/.config/dgx/token"
+        echo "  - Seeded empty ~/.config/dgx/token (paste the DGX gateway key)"
+    fi
 
     # init-vscode: VS Code attach-debugging for a .NET repo (.vscode/launch.json +
     # running-apps.sh), idempotent. ~/.local/bin is already on PATH via .zshrc.

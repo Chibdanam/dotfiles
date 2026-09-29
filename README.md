@@ -200,6 +200,7 @@ dotfiles/
 │   ├── git/                # .gitconfig, global gitignore, .gitconfig.local template
 │   ├── claude/             # Claude Code global config, skills, commands, hooks
 │   ├── lazygit/config.yml
+│   ├── opencode/           # opencode config (DGX LiteLLM provider, key in ~/.config/dgx/token)
 │   ├── rtk/config.toml
 │   ├── nvim/               # Neovim config
 │   ├── ohmyposh/zen.toml   # Prompt theme
