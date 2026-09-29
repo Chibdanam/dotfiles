@@ -1,7 +1,7 @@
 # Machine-specific git config — not versioned, included from ~/.gitconfig.
 # Seeded on first install, then never overwritten. Identity and the gh
 # credential helpers are filled in by scripts/modules/git.sh; refresh them
-# by hand with `git-local gh auth setup-git`.
+# with `./install.sh git`, not `gh auth setup-git` (it pins the gh version).
 [user]
 	name =
 	email =

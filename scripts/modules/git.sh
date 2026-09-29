@@ -51,11 +51,18 @@ setup_git() {
     git config --file "$git_local" user.name "$git_name"
     git config --file "$git_local" user.email "$git_email"
 
-    # gh's helper path embeds the gh version, so refresh it here rather than
-    # version it. GIT_CONFIG_GLOBAL sends gh's --global writes to the local file.
-    if command -v gh &> /dev/null && gh auth status &> /dev/null; then
-        GIT_CONFIG_GLOBAL="$git_local" gh auth setup-git
-        echo "  - Refreshed gh credential helpers in $git_local"
+    # Not `gh auth setup-git`: it bakes in the versioned install path, which the
+    # next `mise up` deletes. The mise shim always resolves the current gh.
+    local gh_shim="$HOME/.local/share/mise/shims/gh"
+    if [[ -x "$gh_shim" ]] && "$gh_shim" auth status &> /dev/null; then
+        local host
+        for host in https://github.com https://gist.github.com; do
+            git config --file "$git_local" --unset-all "credential.$host.helper" || true
+            # The empty entry resets helpers inherited from other config files
+            git config --file "$git_local" --add "credential.$host.helper" ""
+            git config --file "$git_local" --add "credential.$host.helper" "!$gh_shim auth git-credential"
+        done
+        echo "  - Pointed the gh credential helpers in $git_local at the mise shim"
     fi
 
     # Create global gitignore if it doesn't exist
