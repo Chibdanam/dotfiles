@@ -62,6 +62,7 @@ update-all() {
 	_update_all_step "claude code"    claude    claude update
 	_update_all_step "herdr"          herdr     herdr update
 	_update_all_step "codegraph"      codegraph codegraph upgrade
+	_update_all_step "opencode"       opencode  opencode upgrade
 	_update_all_step "rust toolchain" rustup    rustup update
 	_update_all_step "snap packages"  snap      sudo snap refresh
 	_update_all_step "zsh plugins"    zinit     _update_all_zinit
