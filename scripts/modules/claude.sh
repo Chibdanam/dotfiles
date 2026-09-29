@@ -13,6 +13,8 @@ install_claude_config() {
 
     cp "$SOURCE_DIR/settings.json" "$TARGET_DIR/settings.json"
     cp "$SOURCE_DIR/CLAUDE.md" "$TARGET_DIR/CLAUDE.md"
+    # CLAUDE.md pulls it in with @RTK.md
+    cp "$SOURCE_DIR/RTK.md" "$TARGET_DIR/RTK.md"
     cp "$SOURCE_DIR/statusline.sh" "$TARGET_DIR/statusline.sh"
     chmod +x "$TARGET_DIR/statusline.sh"
 
@@ -23,6 +25,7 @@ install_claude_config() {
     echo "Claude Code configuration installed!"
     echo "  - Settings:  $TARGET_DIR/settings.json"
     echo "  - CLAUDE.md: $TARGET_DIR/CLAUDE.md"
+    echo "  - RTK.md:    $TARGET_DIR/RTK.md"
     echo "  - Statusline:$TARGET_DIR/statusline.sh"
     echo "  - Skills:    $TARGET_DIR/skills"
 }
