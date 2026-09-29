@@ -65,26 +65,9 @@ setup_git() {
         echo "  - Pointed the gh credential helpers in $git_local at the mise shim"
     fi
 
-    # Create global gitignore if it doesn't exist
-    if [[ ! -f "$HOME/.gitignore" ]]; then
-        cat > "$HOME/.gitignore" << 'EOF'
-# OS files
-.DS_Store
-Thumbs.db
-
-# Editor files
-*.swp
-*.swo
-*~
-.idea/
-.vscode/
-*.sublime-*
-
-# Environment files
-.env.local
-.env.*.local
-EOF
-    fi
+    # Global gitignore (core.excludesfile). Named without the dot in the repo so
+    # it doesn't act as an ignore file for config/git/ itself.
+    cp "$DOTFILES_DIR/config/git/gitignore" "$HOME/.gitignore"
 
     echo "Git configuration complete!"
     echo "  Name:  $(git config --global user.name)"
