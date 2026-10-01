@@ -167,5 +167,6 @@
   "skipWorkflowUsageWarning": true,
   "theme": "auto",
   "showTurnDuration": true,
+  "outputStyle": "Concise",
   "agentPushNotifEnabled": true
 }
