@@ -9,7 +9,7 @@ TARGET_DIR="$HOME/.claude"
 install_claude_config() {
     echo "Installing Claude Code configuration..."
 
-    mkdir -p "$TARGET_DIR/skills"
+    mkdir -p "$TARGET_DIR/skills" "$TARGET_DIR/commands"
 
     # Machine policy lives in an untracked, seed-once file (same pattern as
     # ~/.gitconfig.local): tracked settings.json is the shared baseline,
@@ -55,12 +55,14 @@ install_claude_config() {
     if [[ -d "$SOURCE_DIR/skills" ]]; then
         cp -R "$SOURCE_DIR/skills/." "$TARGET_DIR/skills/"
     fi
+    cp "$SOURCE_DIR/commands/"*.md "$TARGET_DIR/commands/"
 
     echo "Claude Code configuration installed!"
     echo "  - Settings:  $TARGET_DIR/settings.json"
     echo "  - CLAUDE.md: $TARGET_DIR/CLAUDE.md"
     echo "  - Statusline:$TARGET_DIR/statusline.sh"
     echo "  - Skills:    $TARGET_DIR/skills"
+    echo "  - Commands:  $TARGET_DIR/commands"
 }
 
 install_claude_config

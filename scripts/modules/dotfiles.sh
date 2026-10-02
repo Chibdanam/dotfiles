@@ -14,6 +14,9 @@ copy_dotfiles() {
     mkdir -p "$HOME/.config/tmux"
     mkdir -p "$HOME/.config/herdr"
     mkdir -p "$HOME/.config/zsh"
+    mkdir -p "$HOME/.config/lazygit"
+    mkdir -p "$HOME/.config/rtk"
+    mkdir -p "$HOME/.config/opencode"
     mkdir -p "$HOME/dev"
     
     # Copy nvim config
@@ -31,6 +34,9 @@ copy_dotfiles() {
     echo "  - Zsh config"
     cp "$DOTFILES_DIR/config/zsh/.zshenv" "$HOME/.zshenv"
     cp "$DOTFILES_DIR/config/zsh/.zshrc" "$HOME/.config/zsh/.zshrc"
+    # Mirror the repo: .zshrc sources every *.zsh, so a file removed upstream
+    # would keep loading. The glob skips dotfiles, .secrets.zsh survives.
+    rm -f "$HOME/.config/zsh/"*.zsh
     cp "$DOTFILES_DIR/config/zsh/"*.zsh "$HOME/.config/zsh/"
     # Clean up any leftovers from the pre-XDG layout.
     rm -f "$HOME/.zshrc"
@@ -63,6 +69,47 @@ copy_dotfiles() {
     # Copy oh-my-posh config
     echo "  - Oh My Posh config"
     cp "$DOTFILES_DIR/config/ohmyposh/zen.toml" "$HOME/.config/ohmyposh/"
+
+    echo "  - Lazygit config"
+    cp "$DOTFILES_DIR/config/lazygit/config.yml" "$HOME/.config/lazygit/config.yml"
+
+    # rtk's filters.toml is its own untouched template: only config.toml is ours
+    echo "  - rtk config"
+    cp "$DOTFILES_DIR/config/rtk/config.toml" "$HOME/.config/rtk/config.toml"
+
+    # opencode writes its own package.json/node_modules here: only the config
+    # is ours. It reads the DGX key from ~/.config/dgx/token and refuses to
+    # start if that file is missing, so seed an empty one (fill it by hand).
+    echo "  - opencode config"
+    cp "$DOTFILES_DIR/config/opencode/opencode.jsonc" "$HOME/.config/opencode/opencode.jsonc"
+    if [ ! -e "$HOME/.config/dgx/token" ]; then
+        mkdir -p "$HOME/.config/dgx"
+        install -m 600 /dev/null "$HOME/.config/dgx/token"
+        echo "  - Seeded empty ~/.config/dgx/token (paste the DGX gateway key)"
+    fi
+
+    # init-vscode: VS Code attach-debugging for a .NET repo (.vscode/launch.json +
+    # running-apps.sh), idempotent. ~/.local/bin is already on PATH via .zshrc.
+    echo "  - Helper: init-vscode"
+    mkdir -p "$HOME/.local/bin"
+    cp "$DOTFILES_DIR/bin/init-vscode" "$HOME/.local/bin/init-vscode"
+    chmod +x "$HOME/.local/bin/init-vscode"
+
+    # WSL-only integrations, skipped on a native Linux box where there's no
+    # Windows side.
+    if grep -qiE '(microsoft|wsl)' /proc/version 2>/dev/null; then
+        # ii: reveal a WSL path in Windows Explorer, like PowerShell's
+        # Invoke-Item. ~/.local/bin is already on PATH via .zshrc.
+        echo "  - WSL helper: ii"
+        cp "$DOTFILES_DIR/bin/ii" "$HOME/.local/bin/ii"
+        chmod +x "$HOME/.local/bin/ii"
+
+        # VS Code machine settings of the WSL remote: the yellow tint telling
+        # WSL windows from Windows ones, in a light and a dark variant.
+        echo "  - VS Code WSL machine settings"
+        mkdir -p "$HOME/.vscode-server/data/Machine"
+        cp "$DOTFILES_DIR/config/vscode/machine-settings.json" "$HOME/.vscode-server/data/Machine/settings.json"
+    fi
 
     echo "Dotfiles copied!"
 }

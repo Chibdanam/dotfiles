@@ -41,6 +41,8 @@ Or combine:
 
 Tmux and oh-my-posh intentionally inherit colors from the SSH client terminal.
 
+`init-vscode` (from `bin/`, on PATH after the `dotfiles` module), run anywhere inside a .NET git repository, sets that repository up for attach-debugging from VS Code, at its root: the apps keep starting from a terminal (`dotnet run`, mise) and VS Code only attaches. It writes `.vscode/running-apps.sh` and merges two "Attach" entries into `.vscode/launch.json`: a picker of the repo's running apps not yet debugged, labelled by project and naming the session after it, plus the C# extension's own process picker as a fallback. It only reports until it is given `--apply`; re-running it is a no-op, it only refreshes what it marked as its own. It ends by checking what attaching depends on: `kernel.yama.ptrace_scope` must be 0 (Ubuntu ships 1, which makes every attach bind nothing) and the C# and Tasks Shell Input extensions must be installed on the WSL side.
+
 Herdr is the preferred terminal workspace manager (shell shortcut `f`); tmux is kept as a fallback (`tf`). The `herdr` module installs the binary from herdr.dev, and its config plus space sessionizer live in `config/herdr/` (copied by the `dotfiles` module). Runtime state (sockets, logs, `session.json`, worktrees) is intentionally not versioned.
 
 GitHub SSH setup is optional. Public bootstrap downloads use HTTPS by default so a fresh shell works before adding a GitHub SSH key.
@@ -185,19 +187,41 @@ Permission-rule merging: local `allow`/`ask`/`deny` arrays union with the baseli
 | `tf` | Tmux sessionizer (fallback; select project, create/attach session) |
 | `ff` | Fuzzy find files, open in nvim |
 | `z <dir>` | Smart cd with zoxide |
+| `update-all` | Run every updater (apt, mise, Claude Code, herdr, codegraph, opencode, rustup, snap, zinit, nvim plugins); a failing step doesn't stop the rest, the summary lists ok / skipped / failed |
+
+### WSL Integration
+
+Installed by the `dotfiles` module only when `/proc/version` reports WSL.
+
+| Helper | Description |
+|--------|-------------|
+| `ii [path ...]` | PowerShell's `Invoke-Item` from inside WSL: reveals the path in Windows Explorer. A directory opens itself, a file opens its parent folder with the file selected. `-o`/`--open` hands the path to its default Windows app instead. Defaults to `.` |
+
+`ii` translates WSL paths with `wslpath -w`, so both `/mnt/c/...` and paths on
+the distro filesystem (`\\wsl.localhost\...`) work. URLs and shell handlers
+(`ii shell:Downloads`) are passed through untouched.
+
+`config/vscode/machine-settings.json` goes to `~/.vscode-server/data/Machine/settings.json`:
+the yellow title bar and side bar that set WSL windows apart, with a light and a dark
+variant (`[*Light*]` / `[*Dark*]`) so it follows the Windows color scheme.
 
 ## Directory Structure
 
 ```
 dotfiles/
 ├── install.sh              # Main install script
+├── bin/                    # Helper executables, copied to ~/.local/bin
 ├── config/
-│   ├── git/.gitconfig
-│   ├── claude/             # Claude Code global config and skills
+│   ├── git/                # .gitconfig, global gitignore, .gitconfig.local template
+│   ├── claude/             # Claude Code global config, skills, commands, hooks
+│   ├── lazygit/config.yml
+│   ├── opencode/           # opencode config (DGX LiteLLM provider, key in ~/.config/dgx/token)
+│   ├── rtk/config.toml
 │   ├── nvim/               # Neovim config
 │   ├── ohmyposh/zen.toml   # Prompt theme
 │   ├── herdr/              # Herdr config + space sessionizer
 │   ├── tmux/tmux.conf
+│   ├── vscode/             # VS Code machine settings of the WSL remote
 │   └── zsh/                # Zsh configs
 ├── scripts/
 │   └── modules/            # Install modules

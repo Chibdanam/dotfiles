@@ -1,0 +1,28 @@
+gui:
+  # Panneau focalisé agrandi (le graphe prend la moitié de l'écran)
+  screenMode: half
+  enlargedSideViewLocation: left
+  # Panneau gauche plus large en mode normal (défaut 0.33)
+  sidePanelWidth: 0.45
+  # Le panneau focalisé s'étire verticalement, les autres se réduisent
+  expandFocusedSidePanel: true
+  expandedSidePanelWeight: 3
+  # Libère de la hauteur
+  showCommandLog: false
+  showRandomTip: false
+  # Lisibilité du graphe
+  commitHashLength: 7
+  showBranchCommitHash: true
+  showDivergenceFromBaseBranch: arrowAndNumber
+  nerdFontsVersion: "3"
+  branchColorPatterns:
+    '^PR/#\d+-[^-]+$': '#5fafff'   # racines PR/#WI-Sujet
+    '^PR/#\d+-.+-.+$': '#87d787'   # sous-branches
+    '^Integration/': '#ffaf5f'
+
+git:
+  log:
+    order: topo-order
+    showGraph: always
+    # Affiche toutes les branches dans le graphe, pas seulement celle courante
+    showWholeGraph: true

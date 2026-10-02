@@ -1,0 +1,63 @@
+#!/bin/sh
+# ii — PowerShell's Invoke-Item, from inside WSL.
+#
+# Reveals the target in Windows Explorer: a directory opens itself, a file opens
+# its parent folder with the file selected (explorer /select,). Pass -o to hand
+# the path to its default Windows app instead.
+#
+# explorer.exe is called by absolute path because the Windows PATH is not
+# appended inside WSL (/etc/wsl.conf, [interop] appendWindowsPath=false), and its
+# exit status is discarded because Explorer returns 1 even when it succeeds.
+
+EXPLORER=/mnt/c/Windows/explorer.exe
+
+usage() {
+    cat <<'USAGE'
+usage: ii [-o|--open] [--] [path ...]
+
+Reveal each path in Windows Explorer. A directory opens itself; a file opens
+its parent folder with the file selected. Defaults to the current directory.
+
+  -o, --open   open the path with its default Windows app instead of revealing it
+  -h, --help   show this help
+USAGE
+}
+
+mode=reveal
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        -o | --open) mode=open; shift ;;
+        -h | --help) usage; exit 0 ;;
+        --) shift; break ;;
+        -?*) echo "ii: unknown option: $1" >&2; usage >&2; exit 2 ;;
+        *) break ;;
+    esac
+done
+
+[ "$#" -eq 0 ] && set -- .
+
+status=0
+for target; do
+    case "$target" in
+        *://* | shell:* | ms-*:* | [A-Za-z]:/* | [A-Za-z]:'\'* | '\\'*)
+            # URL, protocol handler or already a Windows path: hand over as-is
+            "$EXPLORER" "$target" || :
+            continue
+            ;;
+    esac
+
+    if [ ! -e "$target" ]; then
+        echo "ii: $target: No such file or directory" >&2
+        status=1
+        continue
+    fi
+
+    win=$(wslpath -a -w "$target") || { status=1; continue; }
+
+    if [ "$mode" = reveal ] && [ ! -d "$target" ]; then
+        "$EXPLORER" "/select,$win" || :
+    else
+        "$EXPLORER" "$win" || :
+    fi
+done
+exit $status
