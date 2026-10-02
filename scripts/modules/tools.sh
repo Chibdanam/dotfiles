@@ -34,6 +34,22 @@ install_tools() {
     echo "Installing lazygit..."
     mise use --global lazygit@latest
 
+    # Install bottom (system monitor, `btm`)
+    echo "Installing bottom..."
+    mise use --global bottom@latest
+
+    # Install lazydocker (Docker TUI)
+    echo "Installing lazydocker..."
+    mise use --global lazydocker@latest
+
+    # Install uv. Comes before any pipx:* tool: mise installs those through uv.
+    echo "Installing uv..."
+    mise use --global uv@latest
+
+    # Install claude-swap (switch between Claude accounts)
+    echo "Installing claude-swap..."
+    mise use --global pipx:claude-swap@latest
+
     # Install macchina (Rust-based system info fetch, aliased to `fetch`).
     # mise's registry doesn't include macchina; build from source via cargo.
     if ! command -v macchina &>/dev/null; then

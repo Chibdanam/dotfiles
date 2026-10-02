@@ -109,6 +109,10 @@ One branch serves every machine. Tracked config files are overwritten on each in
 | zoxide | mise | Smart cd |
 | delta | mise | Git diff viewer |
 | lazygit | mise | Git TUI |
+| bottom | mise | System monitor (`btm`) |
+| lazydocker | mise | Docker TUI |
+| uv | mise | Python package manager; backs mise's `pipx:` tools |
+| claude-swap | mise (pipx) | Switch between Claude accounts |
 | gh | mise | GitHub CLI |
 | colorscript | git/make | shell-color-scripts; decorative blocks in snacks dashboard |
 | macchina | cargo | Rust-based system info fetch (aliased to `fetch`) |
