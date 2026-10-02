@@ -194,6 +194,7 @@ dotfiles/
 ├── config/
 │   ├── git/.gitconfig
 │   ├── claude/             # Claude Code global config and skills
+│   ├── lazygit/config.yml
 │   ├── nvim/               # Neovim config
 │   ├── ohmyposh/zen.toml   # Prompt theme
 │   ├── herdr/              # Herdr config + space sessionizer

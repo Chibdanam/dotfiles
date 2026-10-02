@@ -1,0 +1,24 @@
+gui:
+  # Enlarged focused panel (the graph takes half the screen)
+  screenMode: half
+  enlargedSideViewLocation: left
+  # Wider left panel in normal mode (default 0.33)
+  sidePanelWidth: 0.45
+  # The focused panel stretches vertically, the others shrink
+  expandFocusedSidePanel: true
+  expandedSidePanelWeight: 3
+  # Frees up height
+  showCommandLog: false
+  showRandomTip: false
+  # Graph readability
+  commitHashLength: 7
+  showBranchCommitHash: true
+  showDivergenceFromBaseBranch: arrowAndNumber
+  nerdFontsVersion: "3"
+
+git:
+  log:
+    order: topo-order
+    showGraph: always
+    # Show every branch in the graph, not only the current one
+    showWholeGraph: true
