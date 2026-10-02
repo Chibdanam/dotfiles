@@ -198,6 +198,10 @@ Installed by the `dotfiles` module only when `/proc/version` reports WSL.
 the distro filesystem (`\\wsl.localhost\...`) work. URLs and shell handlers
 (`ii shell:Downloads`) are passed through untouched.
 
+`config/vscode/machine-settings.json` goes to `~/.vscode-server/data/Machine/settings.json`:
+the yellow title bar and side bar that set WSL windows apart, with a light and a dark
+variant (`[*Light*]` / `[*Dark*]`) so it follows the Windows color scheme.
+
 ## Directory Structure
 
 ```
@@ -212,6 +216,7 @@ dotfiles/
 │   ├── ohmyposh/zen.toml   # Prompt theme
 │   ├── herdr/              # Herdr config + space sessionizer
 │   ├── tmux/tmux.conf
+│   ├── vscode/             # VS Code machine settings of the WSL remote
 │   └── zsh/                # Zsh configs
 ├── scripts/
 │   └── modules/            # Install modules

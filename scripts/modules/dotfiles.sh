@@ -77,6 +77,12 @@ copy_dotfiles() {
         mkdir -p "$HOME/.local/bin"
         cp "$DOTFILES_DIR/bin/ii" "$HOME/.local/bin/ii"
         chmod +x "$HOME/.local/bin/ii"
+
+        # VS Code machine settings of the WSL remote: the yellow tint telling
+        # WSL windows from Windows ones, in a light and a dark variant.
+        echo "  - VS Code WSL machine settings"
+        mkdir -p "$HOME/.vscode-server/data/Machine"
+        cp "$DOTFILES_DIR/config/vscode/machine-settings.json" "$HOME/.vscode-server/data/Machine/settings.json"
     fi
 
     echo "Dotfiles copied!"

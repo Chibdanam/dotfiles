@@ -1,0 +1,26 @@
+{
+    // Yellow tint marking the WSL windows, one variant per Windows color scheme
+    // (window.autoDetectColorScheme switches the theme, the tint follows it).
+    "workbench.colorCustomizations": {
+        "[*Light*]": {
+            "titleBar.activeBackground": "#FBF3C7",
+            "titleBar.activeForeground": "#3A3A1A",
+            "titleBar.inactiveBackground": "#F3EBB0",
+            "titleBar.inactiveForeground": "#6B6B45",
+            "sideBar.background": "#FCF8DD",
+            "sideBar.foreground": "#3A3A1A",
+            "sideBarTitle.foreground": "#3A3A1A",
+            "sideBarSectionHeader.background": "#F5EFC4"
+        },
+        "[*Dark*]": {
+            "titleBar.activeBackground": "#3D3818",
+            "titleBar.activeForeground": "#F3EBB0",
+            "titleBar.inactiveBackground": "#2C2913",
+            "titleBar.inactiveForeground": "#A8A07A",
+            "sideBar.background": "#262412",
+            "sideBar.foreground": "#E8E2C0",
+            "sideBarTitle.foreground": "#E8E2C0",
+            "sideBarSectionHeader.background": "#302D17"
+        }
+    }
+}
