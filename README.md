@@ -190,6 +190,10 @@ the distro filesystem (`\\wsl.localhost\...`) work. URLs and shell handlers
 The Tridactyl config is also copied to the Windows user profile so Firefox picks
 up the nvim editor integration.
 
+`config/vscode/machine-settings.json` goes to `~/.vscode-server/data/Machine/settings.json`:
+the yellow title bar and side bar that set WSL windows apart, with a light and a dark
+variant (`[*Light*]` / `[*Dark*]`) so it follows the Windows color scheme.
+
 ## Directory Structure
 
 ```
@@ -206,6 +210,7 @@ dotfiles/
 │   ├── ohmyposh/zen.toml   # Prompt theme
 │   ├── herdr/              # Herdr config + space sessionizer
 │   ├── tmux/tmux.conf
+│   ├── vscode/             # VS Code machine settings of the WSL remote
 │   └── zsh/                # Zsh configs
 ├── scripts/
 │   └── modules/            # Install modules
