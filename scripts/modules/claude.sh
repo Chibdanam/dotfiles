@@ -9,7 +9,7 @@ TARGET_DIR="$HOME/.claude"
 install_claude_config() {
     echo "Installing Claude Code configuration..."
 
-    mkdir -p "$TARGET_DIR/skills"
+    mkdir -p "$TARGET_DIR/skills" "$TARGET_DIR/commands"
 
     cp "$SOURCE_DIR/settings.json" "$TARGET_DIR/settings.json"
     cp "$SOURCE_DIR/CLAUDE.md" "$TARGET_DIR/CLAUDE.md"
@@ -20,6 +20,7 @@ install_claude_config() {
     if [[ -d "$SOURCE_DIR/skills" ]]; then
         cp -R "$SOURCE_DIR/skills/." "$TARGET_DIR/skills/"
     fi
+    cp "$SOURCE_DIR/commands/"*.md "$TARGET_DIR/commands/"
 
     # Tool integrations patch settings.json and CLAUDE.md themselves, and both
     # were just overwritten above, so re-run each installer when its tool is
@@ -42,6 +43,7 @@ install_claude_config() {
     echo "  - CLAUDE.md: $TARGET_DIR/CLAUDE.md"
     echo "  - Statusline:$TARGET_DIR/statusline.sh"
     echo "  - Skills:    $TARGET_DIR/skills"
+    echo "  - Commands:  $TARGET_DIR/commands"
 }
 
 install_claude_config
