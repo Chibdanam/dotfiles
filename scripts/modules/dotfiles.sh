@@ -68,6 +68,17 @@ copy_dotfiles() {
     echo "  - Lazygit config"
     cp "$DOTFILES_DIR/config/lazygit/config.yml" "$HOME/.config/lazygit/config.yml"
 
+    # WSL-only integrations, skipped on a native Linux box where there's no
+    # Windows side.
+    if grep -qiE '(microsoft|wsl)' /proc/version 2>/dev/null; then
+        # ii: reveal a WSL path in Windows Explorer, like PowerShell's
+        # Invoke-Item. ~/.local/bin is already on PATH via .zshrc.
+        echo "  - WSL helper: ii"
+        mkdir -p "$HOME/.local/bin"
+        cp "$DOTFILES_DIR/bin/ii" "$HOME/.local/bin/ii"
+        chmod +x "$HOME/.local/bin/ii"
+    fi
+
     echo "Dotfiles copied!"
 }
 

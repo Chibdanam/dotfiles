@@ -186,11 +186,24 @@ One branch serves every machine. Tracked config files are overwritten on each in
 | `z <dir>` | Smart cd with zoxide |
 | `update-all` | Run every updater (apt, mise, Claude Code, herdr, codegraph, opencode, rustup, snap, zinit, nvim plugins); a failing step doesn't stop the rest, the summary lists ok / skipped / failed |
 
+### WSL Integration
+
+Installed by the `dotfiles` module only when `/proc/version` reports WSL.
+
+| Helper | Description |
+|--------|-------------|
+| `ii [path ...]` | PowerShell's `Invoke-Item` from inside WSL: reveals the path in Windows Explorer. A directory opens itself, a file opens its parent folder with the file selected. `-o`/`--open` hands the path to its default Windows app instead. Defaults to `.` |
+
+`ii` translates WSL paths with `wslpath -w`, so both `/mnt/c/...` and paths on
+the distro filesystem (`\\wsl.localhost\...`) work. URLs and shell handlers
+(`ii shell:Downloads`) are passed through untouched.
+
 ## Directory Structure
 
 ```
 dotfiles/
 ├── install.sh              # Main install script
+├── bin/                    # Helper executables, copied to ~/.local/bin
 ├── config/
 │   ├── git/.gitconfig
 │   ├── claude/             # Claude Code global config and skills
