@@ -40,5 +40,12 @@
   "effortLevel": "xhigh",
   "autoUpdatesChannel": "stable",
   "theme": "auto",
-  "showTurnDuration": true
+  "showTurnDuration": true,
+  "model": "opus",
+  "modelSettings": {
+    "claude-fable-5-1": {
+      "effortLevel": "high"
+    }
+  },
+  "agentPushNotifEnabled": true
 }
