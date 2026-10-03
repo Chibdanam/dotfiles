@@ -49,6 +49,8 @@ The `git` module reuses an existing global Git identity when `user.name` and `us
 
 The `claude` module installs user-scoped Claude Code configuration into `~/.claude/`. The default settings disable Claude attribution in commits and pull requests, allow common Git workflows without prompts, ask for approval on higher-risk commands, and block a few dangerous patterns outright. The tracked `settings.json` is the shared baseline; the installed `~/.claude/settings.json` is **generated** by merging it with `~/.claude/settings.local.json` (see below) — put durable machine preferences in the local file, not in the generated one, or the next install loses them (this includes defaults saved by `/effort`, `/model`, `/config`).
 
+After generating `settings.json` and copying `CLAUDE.md`, the module re-runs the Claude integrations of herdr (`herdr integration install claude`), rtk (`rtk init -g`) and codegraph (`codegraph install`) when those tools are installed, so their hooks, MCP server and `CLAUDE.md` blocks survive every install. Their output is owned by each tool and not versioned here.
+
 ## Machine-local configuration
 
 One branch serves every machine. Tracked config files are overwritten on each install; anything that differs per machine lives in an untracked local file that is seeded once from a template and never overwritten afterwards.

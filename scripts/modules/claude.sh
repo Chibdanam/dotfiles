@@ -56,6 +56,22 @@ install_claude_config() {
         cp -R "$SOURCE_DIR/skills/." "$TARGET_DIR/skills/"
     fi
 
+    # Tool integrations patch settings.json and CLAUDE.md themselves, and both
+    # were just overwritten above, so re-run each installer when its tool is
+    # present. Their output changes with every tool release: not versioned.
+    if command -v herdr &> /dev/null; then
+        herdr integration install claude
+        echo "  - herdr integration"
+    fi
+    if command -v rtk &> /dev/null; then
+        rtk init -g --auto-patch
+        echo "  - rtk hook"
+    fi
+    if command -v codegraph &> /dev/null; then
+        codegraph install --target claude --location global --yes
+        echo "  - codegraph MCP + hook"
+    fi
+
     echo "Claude Code configuration installed!"
     echo "  - Settings:  $TARGET_DIR/settings.json"
     echo "  - CLAUDE.md: $TARGET_DIR/CLAUDE.md"
