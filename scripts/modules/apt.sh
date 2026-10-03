@@ -22,7 +22,13 @@ install_apt() {
         eza \
         python3 \
         python3-pip
-    
+
+    # Debian/Ubuntu ship these as batcat and fdfind (name clashes in the
+    # archive). Links rather than aliases so scripts and fzf see them too.
+    mkdir -p "$HOME/.local/bin"
+    ln -sf /usr/bin/batcat "$HOME/.local/bin/bat"
+    ln -sf /usr/bin/fdfind "$HOME/.local/bin/fd"
+
     echo "System dependencies installed!"
 }
 
