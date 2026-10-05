@@ -41,6 +41,7 @@
   "autoUpdatesChannel": "stable",
   "theme": "auto",
   "showTurnDuration": true,
+  "outputStyle": "Concise",
   "model": "opus",
   "modelSettings": {
     "claude-fable-5-1": {
