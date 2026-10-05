@@ -1,6 +1,6 @@
 # -U drops duplicates: this file re-prepends on every shell, nested ones included
 typeset -U path PATH
-path=("$HOME/.dotnet/tools" "$HOME/.cargo/bin" "$HOME/.local/bin" /snap/bin $path)
+path=("$HOME/.dotnet/tools" "$HOME/.cargo/bin" "$HOME/.local/bin" "$HOME/.opencode/bin" /snap/bin $path)
 export PATH
 
 # Zinit. Keyed on zinit.zsh, not the directory: an interrupted clone leaves a
