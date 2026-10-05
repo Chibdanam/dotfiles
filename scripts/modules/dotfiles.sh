@@ -15,6 +15,7 @@ copy_dotfiles() {
     mkdir -p "$HOME/.config/herdr"
     mkdir -p "$HOME/.config/zsh"
     mkdir -p "$HOME/.config/lazygit"
+    mkdir -p "$HOME/.config/rtk"
     mkdir -p "$HOME/dev"
     
     # Copy nvim config
@@ -67,6 +68,10 @@ copy_dotfiles() {
 
     echo "  - Lazygit config"
     cp "$DOTFILES_DIR/config/lazygit/config.yml" "$HOME/.config/lazygit/config.yml"
+
+    # rtk's filters.toml is its own untouched template: only config.toml is ours
+    echo "  - rtk config"
+    cp "$DOTFILES_DIR/config/rtk/config.toml" "$HOME/.config/rtk/config.toml"
 
     # init-vscode: VS Code attach-debugging for a .NET repo (.vscode/launch.json +
     # running-apps.sh), idempotent. ~/.local/bin is already on PATH via .zshrc.
