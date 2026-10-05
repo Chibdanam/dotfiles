@@ -106,6 +106,10 @@ run_module() {
     
     print_header "Installing: ${MODULES[$module]}"
     source "$script"
+    # A branch layered on this one adds steps to a module without editing it
+    if [[ -f "$MODULES_DIR/$module.local.sh" ]]; then
+        source "$MODULES_DIR/$module.local.sh"
+    fi
     print_success "Module '$module' completed"
 }
 
