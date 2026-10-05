@@ -38,7 +38,7 @@
   },
   "spinnerTipsEnabled": false,
   "effortLevel": "xhigh",
-  "autoUpdatesChannel": "stable",
+  "autoUpdatesChannel": "latest",
   "theme": "auto",
   "showTurnDuration": true,
   "outputStyle": "Concise",
