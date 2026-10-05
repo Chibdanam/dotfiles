@@ -5,8 +5,9 @@ Personal dotfiles for a Debian 13 VPS dev environment.
 ## Quick Start
 
 ```bash
-git clone https://github.com/YannickHerrero/dotfiles.git ~/dotfiles
-cd ~/dotfiles
+git clone https://github.com/Chibdanam/dotfiles.git ~/dev/dotfiles
+cd ~/dev/dotfiles
+git switch personal       # or professional: the machine's layer, see Branches
 ./install.sh all
 ```
 
@@ -49,13 +50,13 @@ GitHub SSH setup is optional. Public bootstrap downloads use HTTPS by default so
 
 The `git` module reuses an existing global Git identity when `user.name` and `user.email` are already set, and asks for confirmation before keeping them.
 
-The `claude` module installs user-scoped Claude Code configuration into `~/.claude/`. The default settings disable Claude attribution in commits and pull requests, run in auto mode, ask for approval only on a short list of destructive or remote commands (`rm -rf`, `sudo`, force push, `git reset --hard`, `ssh`…), and block reading secrets outright. `settings.json` and `CLAUDE.md` are copied as-is (or merged with their `.local` layer, see [Layered branches](#layered-branches)) and overwritten on every install: settings saved by `/effort`, `/model` or `/config` must be reported into the tracked file to survive.
+The `claude` module installs user-scoped Claude Code configuration into `~/.claude/`. The default settings disable Claude attribution in commits and pull requests, run in auto mode, ask for approval only on a short list of destructive or remote commands (`rm -rf`, `sudo`, force push, `git reset --hard`, `ssh`…), and block reading secrets outright. `settings.json` and `CLAUDE.md` are copied as-is (or merged with their `.local` layer, see [Branches](#branches)) and overwritten on every install: settings saved by `/effort`, `/model` or `/config` must be reported into the tracked file to survive.
 
 After generating `settings.json` and copying `CLAUDE.md`, the module re-runs the Claude integrations of herdr (`herdr integration install claude`), rtk (`rtk init -g`) and codegraph (`codegraph install`) when those tools are installed, so their hooks, MCP server and `CLAUDE.md` blocks survive every install. Their output is owned by each tool and not versioned here.
 
 ## Machine-local configuration
 
-One branch serves every machine. Tracked config files are overwritten on each install; anything that differs per machine lives in an untracked local file that is seeded once from a template and never overwritten afterwards.
+Tracked config files are overwritten on each install. What differs per machine and must stay out of git (identity, secrets, pins, roots) lives in an untracked local file that is seeded once from a template and never overwritten afterwards; what differs per machine and is worth versioning goes in a layer branch (see [Branches](#branches)).
 
 | Live file | Purpose | Template | Seeded by |
 |-----------|---------|----------|-----------|
@@ -65,9 +66,29 @@ One branch serves every machine. Tracked config files are overwritten on each in
 | `~/.config/mise/config.toml` | mise tool pins, incl. extra work-only dotnet tools | — | `mise use --global` (manual) |
 | `~/.config/zsh/*.zsh` (any extra file) | free-form machine-local zsh — auto-sourced by the `.zshrc` glob, never deleted by installs | — | manual |
 
-## Layered branches
+## Branches
 
-A branch built on this one (a work machine fork) keeps the shared files untouched and only adds files, so it rebases without conflicts. Where it needs to change a shared file, it ships a tracked `.local` variant next to it: what the variant redefines wins, the rest is appended. This branch has none of them, and installs behave as if the mechanism did not exist.
+| Branch | Content | Installed on |
+|--------|---------|--------------|
+| `develop` | the shared baseline (default branch) | nothing as is |
+| `personal` | `develop` + the personal layer | personal machines |
+| `professional` | `develop` + the work layer | work machines |
+
+A layer branch only adds files on top of `develop` and never edits a shared file, so it always rebases without conflicts. Every change that is not specific to one kind of machine is made on `develop`, then each layer is rebased onto it:
+
+```bash
+git switch develop
+git pull --ff-only
+# edit, commit
+git push origin develop
+git switch professional   # the machine's layer
+git rebase develop
+git push --force-with-lease origin professional
+```
+
+`develop` is protected on GitHub: no force push, no deletion. Each rebase rewrites the layer branch, so another clone on that layer resyncs with `git fetch` then `git reset --hard origin/<layer>`.
+
+Where a layer needs to change a shared file, it ships a tracked `.local` variant next to it: what the variant redefines wins, the rest is appended. `develop` has none of them, and installs behave as if the mechanism did not exist.
 
 | Layer file | Applied by | Rule |
 |------------|------------|------|
