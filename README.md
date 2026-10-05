@@ -49,7 +49,7 @@ GitHub SSH setup is optional. Public bootstrap downloads use HTTPS by default so
 
 The `git` module reuses an existing global Git identity when `user.name` and `user.email` are already set, and asks for confirmation before keeping them.
 
-The `claude` module installs user-scoped Claude Code configuration into `~/.claude/`. The default settings disable Claude attribution in commits and pull requests, run in auto mode, ask for approval only on a short list of destructive or remote commands (`rm -rf`, `sudo`, force push, `git reset --hard`, `ssh`…), and block reading secrets outright. `settings.json` and `CLAUDE.md` are copied as-is and overwritten on every install: settings saved by `/effort`, `/model` or `/config` must be reported into the tracked file to survive.
+The `claude` module installs user-scoped Claude Code configuration into `~/.claude/`. The default settings disable Claude attribution in commits and pull requests, run in auto mode, ask for approval only on a short list of destructive or remote commands (`rm -rf`, `sudo`, force push, `git reset --hard`, `ssh`…), and block reading secrets outright. `settings.json` and `CLAUDE.md` are copied as-is (or merged with their `.local` layer, see [Layered branches](#layered-branches)) and overwritten on every install: settings saved by `/effort`, `/model` or `/config` must be reported into the tracked file to survive.
 
 After generating `settings.json` and copying `CLAUDE.md`, the module re-runs the Claude integrations of herdr (`herdr integration install claude`), rtk (`rtk init -g`) and codegraph (`codegraph install`) when those tools are installed, so their hooks, MCP server and `CLAUDE.md` blocks survive every install. Their output is owned by each tool and not versioned here.
 
@@ -64,6 +64,19 @@ One branch serves every machine. Tracked config files are overwritten on each in
 | `~/.config/zsh/.secrets.zsh` | tokens / API keys | `config/zsh/secrets.zsh.example` | manual (`cp` + `chmod 600`) |
 | `~/.config/mise/config.toml` | mise tool pins, incl. extra work-only dotnet tools | — | `mise use --global` (manual) |
 | `~/.config/zsh/*.zsh` (any extra file) | free-form machine-local zsh — auto-sourced by the `.zshrc` glob, never deleted by installs | — | manual |
+
+## Layered branches
+
+A branch built on this one (a work machine fork) keeps the shared files untouched and only adds files, so it rebases without conflicts. Where it needs to change a shared file, it ships a tracked `.local` variant next to it: what the variant redefines wins, the rest is appended. This branch has none of them, and installs behave as if the mechanism did not exist.
+
+| Layer file | Applied by | Rule |
+|------------|------------|------|
+| `config/claude/settings.local.json` | `claude` module | deep merge into `settings.json`: a key it sets wins, objects merge key by key, arrays gain its entries |
+| `config/claude/CLAUDE.local.md` | `claude` module | merged by `## ` section: a repeated heading replaces the shared section, new headings are appended; text above its first `## ` is not merged |
+| `scripts/modules/<module>.local.sh` | `install.sh`, right after `<module>` | extra install steps |
+| `config/zsh/*.local.zsh` | `.zshrc`, after every other `*.zsh` | redefinitions win |
+
+New files need no mechanism: skills, commands and `config/zsh/*.zsh` are picked up by the existing copy steps. The global gitignore ignores `CLAUDE.local.md`, so the first commit of `config/claude/CLAUDE.local.md` takes `git add -f`.
 
 
 ## What's Included
