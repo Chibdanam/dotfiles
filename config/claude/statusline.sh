@@ -4,28 +4,36 @@
 
 input=$(cat)
 
-# Parse all fields in one python3 call
-IFS=$'\t' read -r model_display project_dir cwd used_pct effort_level output_style < <(
+# Parse all fields in one python3 call. Fields are \x1f-separated: unlike
+# a tab, it is not IFS whitespace, so read keeps empty fields in place.
+IFS=$'\x1f' read -r model_name project_dir cwd used_pct effort_level output_style < <(
   echo "$input" | python3 -c "
-import sys, json
+import sys, json, re
 d = json.load(sys.stdin)
-m = d.get('model', {}).get('display_name', '')
+
+# Family and version read from the model id, so future models need no change:
+# claude-opus-5-5[1m] → Opus 5.5, claude-3-5-sonnet-20241022 → Sonnet 3.5,
+# us.anthropic.claude-opus-4-1-20250805-v1:0 → Opus 4.1
+def model_name(model):
+    mid = re.split(r'[\[@:]', model.get('id') or '')[0]
+    if 'claude-' in mid:
+        tokens = mid.split('claude-', 1)[1].split('-')
+        family = next((t for t in tokens if t.isalpha()), '')
+        version = '.'.join(t for t in tokens if t.isdigit() and len(t) <= 2)
+        if family:
+            return f'{family.capitalize()} {version}'.strip()
+    name = (model.get('display_name') or '').removeprefix('Claude ')
+    return re.sub(r'\s*\(.*\)', '', name)
+
+m = model_name(d.get('model') or {})
 p = d.get('workspace', {}).get('project_dir', '')
 c = d.get('workspace', {}).get('current_dir', '')
 u = d.get('context_window', {}).get('used_percentage')
-e = (d.get('effort') or {}).get('level') or '-'
-s = (d.get('output_style') or {}).get('name') or '-'
-print(f'{m}\t{p}\t{c}\t{u if u is not None else -1}\t{e}\t{s}')
+e = (d.get('effort') or {}).get('level') or ''
+s = (d.get('output_style') or {}).get('name') or ''
+print('\x1f'.join([m, p, c, str(u if u is not None else -1), e, s]))
 "
 )
-
-# '-' stands for an absent field: read collapses consecutive tabs
-[[ "$effort_level" == "-" ]] && effort_level=""
-[[ "$output_style" == "-" ]] && output_style=""
-
-# Short model name: "Claude Opus 4.6" → "Opus"
-model_short="${model_display#Claude }"
-model_short="${model_short%% *}"
 
 # Project folder name
 project_name=""
@@ -68,8 +76,8 @@ DIM="\033[2m"
 RST="\033[0m"
 parts=()
 
-if [[ -n "$model_short" ]]; then
-    model_text="\033[1m${model_short}${RST}"
+if [[ -n "$model_name" ]]; then
+    model_text="\033[1m${model_name}${RST}"
     [[ -n "$effort_level" ]] && model_text+=" \033[35m${effort_level}${RST}"
     parts+=("${model_text}")
 fi
