@@ -56,7 +56,7 @@ if [[ -n "$git_dir" ]]; then
             cached_dir=$(head -1 "$cache_file")
             if [[ "$cached_dir" == "$git_dir" ]]; then
                 use_cache=true
-                IFS=$'\t' read -r git_branch git_staged git_modified < <(sed -n '2p' "$cache_file")
+                IFS=$'\x1f' read -r git_branch git_staged git_modified < <(sed -n '2p' "$cache_file")
             fi
         fi
     fi
@@ -67,7 +67,7 @@ if [[ -n "$git_dir" ]]; then
             git_staged=$(git -C "$git_dir" --no-optional-locks diff --cached --numstat 2>/dev/null | wc -l | tr -d ' ')
             git_modified=$(git -C "$git_dir" --no-optional-locks diff --numstat 2>/dev/null | wc -l | tr -d ' ')
         fi
-        printf '%s\n%s\t%s\t%s\n' "$git_dir" "$git_branch" "$git_staged" "$git_modified" > "$cache_file"
+        printf '%s\n%s\x1f%s\x1f%s\n' "$git_dir" "$git_branch" "$git_staged" "$git_modified" > "$cache_file"
     fi
 fi
 
