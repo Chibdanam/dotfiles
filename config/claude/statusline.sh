@@ -5,7 +5,7 @@
 input=$(cat)
 
 # Parse all fields in one python3 call
-IFS=$'\t' read -r model_display project_dir cwd used_pct < <(
+IFS=$'\t' read -r model_display project_dir cwd used_pct effort_level output_style < <(
   echo "$input" | python3 -c "
 import sys, json
 d = json.load(sys.stdin)
@@ -13,9 +13,15 @@ m = d.get('model', {}).get('display_name', '')
 p = d.get('workspace', {}).get('project_dir', '')
 c = d.get('workspace', {}).get('current_dir', '')
 u = d.get('context_window', {}).get('used_percentage')
-print(f'{m}\t{p}\t{c}\t{u if u is not None else -1}')
+e = (d.get('effort') or {}).get('level') or '-'
+s = (d.get('output_style') or {}).get('name') or '-'
+print(f'{m}\t{p}\t{c}\t{u if u is not None else -1}\t{e}\t{s}')
 "
 )
+
+# '-' stands for an absent field: read collapses consecutive tabs
+[[ "$effort_level" == "-" ]] && effort_level=""
+[[ "$output_style" == "-" ]] && output_style=""
 
 # Short model name: "Claude Opus 4.6" → "Opus"
 model_short="${model_display#Claude }"
@@ -62,7 +68,12 @@ DIM="\033[2m"
 RST="\033[0m"
 parts=()
 
-[[ -n "$model_short" ]] && parts+=("\033[1m${model_short}${RST}")
+if [[ -n "$model_short" ]]; then
+    model_text="\033[1m${model_short}${RST}"
+    [[ -n "$effort_level" ]] && model_text+=" \033[35m${effort_level}${RST}"
+    parts+=("${model_text}")
+fi
+[[ -n "$output_style" ]] && parts+=("\033[36m${output_style}${RST}")
 [[ -n "$project_name" ]] && parts+=("${project_name}")
 
 if [[ -n "$git_branch" ]]; then
