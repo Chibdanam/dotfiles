@@ -27,6 +27,15 @@ install_tools() {
     echo "Installing rtk..."
     mise use --global github:rtk-ai/rtk@latest
 
+    # Install codegraph (code graph MCP server for Claude Code). Self-updates
+    # with `codegraph upgrade`, run by update-all.
+    if ! command -v codegraph &> /dev/null; then
+        echo "Installing codegraph..."
+        curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh
+    else
+        echo "codegraph already installed"
+    fi
+
     # Install zoxide
     echo "Installing zoxide..."
     mise use --global zoxide@latest
