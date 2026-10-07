@@ -140,6 +140,9 @@ New files need no mechanism: skills, commands and `config/zsh/*.zsh` are picked 
 | Tool | Installation | Description |
 |------|--------------|-------------|
 | claude code | curl | AI coding assistant |
+| rtk | mise (github) | Compresses command output for Claude Code |
+| codegraph | curl | Code graph MCP server for Claude Code |
+| opencode | curl | AI coding assistant |
 | zoxide | mise | Smart cd |
 | delta | mise | Git diff viewer |
 | lazygit | mise | Git TUI |
