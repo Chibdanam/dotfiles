@@ -22,6 +22,11 @@ install_tools() {
         echo "Claude Code already installed"
     fi
 
+    # Install rtk (compresses command output for Claude Code). No self-update:
+    # through mise, `mise up` keeps it current.
+    echo "Installing rtk..."
+    mise use --global github:rtk-ai/rtk@latest
+
     # Install zoxide
     echo "Installing zoxide..."
     mise use --global zoxide@latest
