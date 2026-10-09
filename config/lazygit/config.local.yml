@@ -1,0 +1,8 @@
+# Loaded after config.yml (LG_CONFIG_FILE in lazygit.local.zsh): keys set
+# here win, the rest comes from the shared file.
+gui:
+  # ADO gitflow lineage
+  branchColorPatterns:
+    '^PR/#\d+-[^-]+$': '#5fafff'   # PR/#WI-Subject roots
+    '^PR/#\d+-.+-.+$': '#87d787'   # sub-branches
+    '^Integration/': '#ffaf5f'
