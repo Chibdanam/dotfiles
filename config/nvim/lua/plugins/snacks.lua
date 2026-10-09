@@ -85,7 +85,17 @@ require("snacks").setup({
           }, cmd)
         end, cmds)
       end,
-      { section = "startup" },
+      -- The built-in "startup" section reads lazy.stats, gone with vim.pack.
+      function()
+        local active = #vim.tbl_filter(function(p) return p.active end, vim.pack.get())
+        return {
+          align = "center",
+          text = {
+            { "⚡ Neovim loaded ", hl = "footer" },
+            { active .. " plugins", hl = "special" },
+          },
+        }
+      end,
     },
   },
 })
