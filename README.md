@@ -163,7 +163,7 @@ New files need no mechanism: skills, commands and `config/zsh/*.zsh` are picked 
 
 | Plugin | Role |
 |--------|------|
-| lazy.nvim | Plugin manager |
+| vim.pack (built in, Neovim 0.12+) | Plugin manager |
 | blink.cmp | Completion (Rust-backed) |
 | supermaven-nvim | Inline AI completions (ghost text) |
 | snacks.nvim | picker, explorer, dashboard, bigfile, quickfile |

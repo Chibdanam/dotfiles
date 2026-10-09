@@ -66,7 +66,7 @@ update-all() {
 	_update_all_step "rust toolchain" rustup    rustup update
 	_update_all_step "snap packages"  snap      sudo snap refresh
 	_update_all_step "zsh plugins"    zinit     _update_all_zinit
-	_update_all_step "nvim plugins"   nvim      nvim --headless '+Lazy! sync' +qa
+	_update_all_step "nvim plugins"   nvim      nvim --headless '+lua vim.pack.update(nil, { force = true })' +qa
 
 	print -P "\n%F{blue}==>%f summary"
 	(( $#_ua_ok ))      && print -P "  %F{green}ok%f       ${(j:, :)_ua_ok}"
