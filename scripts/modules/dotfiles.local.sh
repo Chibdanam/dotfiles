@@ -19,6 +19,9 @@ copy_local_dotfiles() {
         install -m 600 /dev/null "$HOME/.config/dgx/token"
         echo "  - Seeded empty ~/.config/dgx/token (paste the DGX gateway key)"
     fi
+
+    echo "  - Lazygit work layer"
+    cp "$_LOCAL_DOTFILES_DIR/config/lazygit/config.local.yml" "$HOME/.config/lazygit/config.local.yml"
 }
 
 copy_local_dotfiles
