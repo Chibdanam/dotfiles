@@ -1,0 +1,12 @@
+#!/bin/bash
+# Prefixes the subject with "[<branch after the last slash>] ", as the tracked
+# hook of the ADO repos does, but under bash and silent in detached HEAD
+# (rebase, cherry-pick). Skips main, master, test, prod and release*, and a
+# message that already carries the tag.
+
+branch=$(git symbolic-ref -q --short HEAD) || exit 0
+tag=${branch##*/}
+case $tag in main | master | test | prod) exit 0 ;; esac
+[[ $branch == release* ]] && exit 0
+grep -qF "[$tag]" "$1" && exit 0
+sed -i "1s/^/[$tag] /" "$1"

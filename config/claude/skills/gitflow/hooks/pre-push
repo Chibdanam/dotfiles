@@ -1,0 +1,22 @@
+#!/bin/bash
+# Refuses to send a #NOWI branch (GF_ALLOW_NOWI=1 to override) and to rewrite
+# a remote branch, whatever the flag that forces it (GF_ALLOW_FORCE=1).
+# Deleting a remote branch stays allowed.
+
+status=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+    [[ $local_sha =~ ^0+$ ]] && continue
+    if [[ $remote_ref == *"#NOWI"* && ${GF_ALLOW_NOWI:-} != 1 ]]; then
+        echo "pre-push (gitflow): ${remote_ref#refs/heads/} has no work item: create one and gf rename the branch (GF_ALLOW_NOWI=1 to push anyway)" >&2
+        status=1
+    fi
+    [[ $remote_sha =~ ^0+$ ]] && continue
+    if ! git cat-file -e "$remote_sha^{commit}" 2> /dev/null ||
+        ! git merge-base --is-ancestor "$remote_sha" "$local_sha"; then
+        if [[ ${GF_ALLOW_FORCE:-} != 1 ]]; then
+            echo "pre-push (gitflow): ${remote_ref#refs/heads/} would be rewritten on $1: ask first, then GF_ALLOW_FORCE=1" >&2
+            status=1
+        fi
+    fi
+done
+exit $status

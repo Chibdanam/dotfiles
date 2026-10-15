@@ -1,0 +1,308 @@
+#!/bin/bash
+# gf: the gitflow skill's branch operations. `gf help` lists them.
+set -euo pipefail
+
+GF_DIR=$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)
+# shellcheck source=lib.sh
+. "$GF_DIR/scripts/lib.sh"
+
+usage() {
+    cat <<'EOF'
+usage: gf <command> [args]
+
+  start <id|NOWI> <Name> <base>   create PR/#<id>-<Name> from <base>, untracked, and switch to it
+  split <Detail> [<from>]         create <from>-<Detail> (default: the current branch) and switch to it
+  land [--keep] [-F <file>] [<leaf>]
+                                  bring a leaf into its parent (its name minus the last segment):
+                                  rebase on the parent's head, then one squashed commit with the
+                                  message of <file> (an editor opens without -F), fast-forward,
+                                  delete the leaf. --keep: rebase and fast-forward, commits and
+                                  branch kept (someone else's work)
+  rename <old> <new> [<base>]     rename a branch and retag its commits [old] -> [new], trees,
+                                  authors and dates kept; <base> defaults to the parent
+  pr-message <n> <subject> [<body-file>] [<branch>]
+                                  print the English merge message to paste when completing PR <n>
+  check <base> [<branch>]         list what breaks the rules in <base>..<branch>
+  hooks                           link the skill's git hooks into the current repository
+EOF
+}
+
+GF_TMP=$(mktemp -d)
+trap 'rm -rf "$GF_TMP"' EXIT
+
+current_branch() {
+    git symbolic-ref -q --short HEAD || gf_die "detached HEAD: name the branch"
+}
+
+require_clean() {
+    git diff --quiet && git diff --cached --quiet || gf_die "uncommitted changes in $(git rev-parse --show-toplevel)"
+}
+
+refs_inventory() {
+    git for-each-ref --format='%(refname) %(objectname)' refs/heads refs/tags
+}
+
+cmd_start() {
+    [[ $# -eq 3 ]] || gf_die "usage: gf start <id|NOWI> <Name> <base>"
+    local id=$1 name=$2 base=$3 branch
+    [[ $id =~ ^([0-9]+|NOWI)$ ]] || gf_die "work item must be a number or NOWI: $id"
+    [[ $name =~ ^[A-Z][A-Za-z0-9]*$ ]] || gf_die "name must be PascalCase, without hyphen: $name"
+    branch="PR/#$id-$name"
+    gf_branch_exists "$branch" && gf_die "$branch already exists"
+    gf_check_name "$branch" || exit 1
+    git rev-parse --verify --quiet "$base^{commit}" > /dev/null || gf_die "unknown base: $base"
+    git switch --no-track -c "$branch" "$base"
+}
+
+cmd_split() {
+    [[ $# -ge 1 && $# -le 2 ]] || gf_die "usage: gf split <Detail> [<from>]"
+    local detail=$1 from=${2:-$(current_branch)} branch
+    [[ $detail =~ ^[A-Z][A-Za-z0-9]*$ ]] || gf_die "segment must be PascalCase, without hyphen: $detail"
+    [[ $from == PR/#* ]] || gf_die "not a ticket branch: $from"
+    branch="$from-$detail"
+    gf_branch_exists "$branch" && gf_die "$branch already exists"
+    gf_check_name "$branch" || exit 1
+    git switch --no-track -c "$branch" "$from"
+}
+
+# Puts the parent's tag at the head of the subject, in place of the leaf's.
+retag_subject() {
+    local file=$1 tag=$2 leaftag=$3
+    awk -v t="[$tag]" -v l="[$leaftag]" '
+        NR == 1 {
+            if (index($0, t) == 1) { print; next }
+            if (index($0, l) == 1) $0 = substr($0, length(l) + 1)
+            sub(/^ +/, "")
+            print t " " $0
+            next
+        }
+        { print }' "$file"
+}
+
+cmd_land() {
+    local keep=0 msgfile="" leaf=""
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --keep) keep=1; shift ;;
+            -F) msgfile=${2:?-F needs a file}; shift 2 ;;
+            -*) gf_die "unknown option $1" ;;
+            *) leaf=$1; shift ;;
+        esac
+    done
+    leaf=${leaf:-$(current_branch)}
+    gf_branch_exists "$leaf" || gf_die "unknown branch: $leaf"
+
+    local parent here leaf_wt parent_wt
+    parent=$(gf_parent "$leaf") || gf_die "$leaf has no parent branch: a ticket branch goes in through its PR"
+    here=$(git rev-parse --show-toplevel)
+    leaf_wt=$(gf_worktree_of "$leaf")
+    parent_wt=$(gf_worktree_of "$parent")
+    [[ -n $leaf_wt && $leaf_wt != "$here" ]] && gf_die "$leaf is checked out in $leaf_wt: run gf land there"
+    [[ -n $parent_wt && $parent_wt != "$here" ]] && gf_die "$parent is checked out in $parent_wt: switch it away first"
+    require_clean
+    [[ $(git rev-list --count "$parent..$leaf") -gt 0 ]] || gf_die "$leaf has nothing that $parent lacks"
+
+    local msg=""
+    if [[ $keep == 0 ]]; then
+        msg=$GF_TMP/land-msg
+        if [[ -n $msgfile ]]; then
+            [[ -f $msgfile ]] || gf_die "no such file: $msgfile"
+            cp "$msgfile" "$msg"
+        elif [[ -t 0 && -t 1 ]]; then
+            {
+                echo
+                echo "# Squashed commit of $leaf into $parent: subject, blank line, what and why."
+                git log --reverse --format='%B' "$parent..$leaf" | sed 's/^/# /'
+            } > "$msg"
+            sh -c "$(git var GIT_EDITOR) \"\$1\"" editor "$msg"
+        else
+            gf_die "no message: pass -F <file>"
+        fi
+        git stripspace --strip-comments < "$msg" > "$msg.clean"
+        retag_subject "$msg.clean" "$(gf_tag "$parent")" "$(gf_tag "$leaf")" > "$msg"
+        rm -f "$msg.clean"
+        gf_check_message "$msg" 1 || gf_die "message refused, nothing changed"
+    fi
+
+    [[ $(current_branch) == "$leaf" ]] || git switch --quiet "$leaf"
+
+    local parent_tip leaf_tip new
+    parent_tip=$(git rev-parse "$parent")
+    if ! git rebase "$parent"; then
+        echo "gf: rebase stopped on a conflict: resolve it, git rebase --continue, then run gf land again" >&2
+        exit 1
+    fi
+    leaf_tip=$(git rev-parse HEAD)
+
+    if [[ $keep == 1 ]]; then
+        new=$leaf_tip
+    else
+        new=$(git commit-tree "$leaf_tip^{tree}" -p "$parent_tip" -F "$msg")
+    fi
+    git update-ref -m "gf land: $leaf" "refs/heads/$parent" "$new" "$parent_tip"
+    git switch --quiet "$parent"
+    [[ $(git rev-parse "$parent^{tree}") == "$(git rev-parse "$leaf_tip^{tree}")" ]] ||
+        gf_die "tree of $parent differs from the rebased $leaf ($leaf_tip): nothing deleted, check by hand"
+
+    if [[ $keep == 0 ]]; then
+        git branch -D "$leaf"
+    fi
+    git log --oneline "$parent_tip..$parent"
+}
+
+cmd_rename() {
+    [[ $# -ge 2 && $# -le 3 ]] || gf_die "usage: gf rename <old> <new> [<base>]"
+    local old=$1 new=$2 base=${3:-}
+    gf_branch_exists "$old" || gf_die "unknown branch: $old"
+    gf_branch_exists "$new" && gf_die "$new already exists"
+    gf_check_name "$new" || exit 1
+    if [[ -z $base ]]; then
+        base=$(gf_parent "$new") || base=$(gf_parent "$old") ||
+            gf_die "no parent found: give the base, the branch $old was cut from"
+    fi
+    git merge-base --is-ancestor "$base" "$old" ||
+        echo "gf: $base is not an ancestor of $old: retagging $base..$old anyway" >&2
+
+    local oldtag newtag before after oldtip newtip
+    oldtag=$(gf_tag "$old")
+    newtag=$(gf_tag "$new")
+    before=$(refs_inventory)
+    oldtip=$(git rev-parse "$old")
+
+    local -A map=()
+    local c parents p msg meta an ae ad cn ce cd n
+    msg=$GF_TMP/rename-msg
+    while read -r c parents; do
+        local -a args=()
+        for p in $parents; do
+            args+=(-p "${map[$p]:-$p}")
+        done
+        git cat-file commit "$c" | sed '1,/^$/d' |
+            awk -v o="[$oldtag" -v n="[$newtag" '
+                NR == 1 && (index($0, o "]") == 1 || index($0, o "-") == 1) { $0 = n substr($0, length(o) + 1) }
+                { print }' > "$msg"
+        meta=$(git log -1 --date=raw --format='%an%x1f%ae%x1f%ad%x1f%cn%x1f%ce%x1f%cd' "$c")
+        IFS=$'\x1f' read -r an ae ad cn ce cd <<< "$meta"
+        n=$(GIT_AUTHOR_NAME=$an GIT_AUTHOR_EMAIL=$ae GIT_AUTHOR_DATE=$ad \
+            GIT_COMMITTER_NAME=$cn GIT_COMMITTER_EMAIL=$ce GIT_COMMITTER_DATE=$cd \
+            git commit-tree "$c^{tree}" "${args[@]}" -F "$msg")
+        map[$c]=$n
+    done < <(git rev-list --reverse --topo-order --parents "$base..$old")
+    newtip=${map[$oldtip]:-$oldtip}
+
+    # Other branches whose tip was rewritten follow; branches cut from a
+    # rewritten commit are only reported.
+    local ref sha mb
+    local -a stacked=()
+    while read -r ref sha; do
+        [[ $ref == "refs/heads/$old" ]] && continue
+        if [[ -n ${map[$sha]:-} && ${map[$sha]} != "$sha" ]]; then
+            git update-ref -m "gf rename: $old -> $new" "$ref" "${map[$sha]}" "$sha"
+        elif mb=$(git merge-base "$sha" "$oldtip" 2> /dev/null) && [[ -n ${map[$mb]:-} && ${map[$mb]} != "$mb" ]]; then
+            stacked+=("git rebase --onto ${map[$mb]} $mb '${ref#refs/heads/}'")
+        fi
+    done < <(git for-each-ref --format='%(refname) %(objectname)' refs/heads)
+
+    git branch -m "$old" "$new"
+    git update-ref -m "gf rename: $old -> $new" "refs/heads/$new" "$newtip" "$oldtip"
+
+    git diff --quiet "$oldtip" "$newtip" || gf_die "trees differ after the rewrite: old tip was $oldtip"
+    after=$(refs_inventory)
+    echo "gf: $old -> $new ($oldtip -> $newtip)"
+    if [[ $(awk -v o="refs/heads/$old" -v n="refs/heads/$new" '{ print ($1 == o ? n : $1) }' <<< "$before" | sort) \
+        != $(awk '{ print $1 }' <<< "$after" | sort) ]]; then
+        echo "gf: WARNING: refs appeared or vanished beyond the rename, compare:" >&2
+        diff <(echo "$before") <(echo "$after") >&2 || true
+    fi
+    if [[ ${#stacked[@]} -gt 0 ]]; then
+        echo "gf: branches built on rewritten commits, rebase them:"
+        printf '  %s\n' "${stacked[@]}"
+    fi
+    if git config --get "branch.$new.remote" > /dev/null; then
+        echo "gf: $old had an upstream: push $new, delete the old remote branch, then git branch --set-upstream-to"
+    fi
+}
+
+cmd_pr_message() {
+    [[ $# -ge 2 && $# -le 4 ]] || gf_die "usage: gf pr-message <n> <subject> [<body-file>] [<branch>]"
+    local n=$1 subject=$2 body=${3:-} branch=${4:-$(current_branch)} lines
+    [[ $n =~ ^[0-9]+$ ]] || gf_die "PR number expected: $n"
+    printf '[%s] Merged PR %s: %s\n' "$(gf_tag "$branch")" "$n" "$subject"
+    if [[ -n $body ]]; then
+        [[ -f $body ]] || gf_die "no such file: $body"
+        lines=$(git stripspace --strip-comments < "$body" | grep -cv '^$' || true)
+        [[ $lines -ge 3 && $lines -le 5 ]] || echo "gf: the body has $lines lines, 3 to 5 expected" >&2
+        echo
+        git stripspace --strip-comments < "$body"
+    fi
+}
+
+cmd_check() {
+    [[ $# -ge 1 && $# -le 2 ]] || gf_die "usage: gf check <base> [<branch>]"
+    local base=$1 branch=${2:-$(current_branch)} tag me c parents subject author errors=0 out
+    tag=$(gf_tag "$branch")
+    me=$(git config user.email)
+    local tmp=$GF_TMP/check-msg
+    [[ $branch == *"#NOWI"* ]] && { echo "$branch: NOWI branch, create a work item before it reaches origin"; errors=1; }
+    while read -r c parents; do
+        subject=$(git log -1 --format=%s "$c")
+        author=$(git log -1 --format=%ae "$c")
+        if [[ $parents == *" "* ]]; then
+            echo "${c:0:9} merge commit inside a ticket branch: $subject"
+            errors=1
+            continue
+        fi
+        if [[ $author == "$me" && $subject != "[$tag] "* ]]; then
+            echo "${c:0:9} subject without [$tag]: $subject"
+            errors=1
+        fi
+        git log -1 --format=%B "$c" > "$tmp"
+        if [[ $subject =~ $GF_AUTOSQUASH ]]; then
+            echo "${c:0:9} fixup not squashed: $subject"
+            errors=1
+        elif ! out=$(gf_check_message "$tmp" 1); then
+            echo "${c:0:9} $out: $subject"
+            errors=1
+        fi
+    done < <(git rev-list --reverse --parents "$base..$branch")
+    [[ $errors == 0 ]] && echo "$branch: ok ($(git rev-list --count "$base..$branch") commits)"
+    return $errors
+}
+
+cmd_hooks() {
+    local dir h target link
+    dir=$(git rev-parse --path-format=absolute --git-common-dir)/hooks
+    mkdir -p "$dir"
+    for h in prepare-commit-msg commit-msg pre-push; do
+        target="$GF_DIR/hooks/$h"
+        link="$dir/$h"
+        if [[ -L $link && $(readlink "$link") == "$target" ]]; then
+            echo "  $h: already linked"
+            continue
+        fi
+        if [[ -e $link || -L $link ]]; then
+            [[ -e $link.pre-gf ]] && gf_die "$link.pre-gf already exists: sort it out by hand"
+            mv "$link" "$link.pre-gf"
+            echo "  $h: previous hook kept as $h.pre-gf"
+        fi
+        ln -s "$target" "$link"
+        echo "  $h: linked"
+    done
+    echo "  forbidden patterns (git config gf.forbidden):"
+    git config --get-all gf.forbidden | sed 's/^/    /' || echo "    none"
+}
+
+[[ $# -ge 1 ]] || { usage; exit 1; }
+command=$1
+shift
+case $command in
+    start) cmd_start "$@" ;;
+    split) cmd_split "$@" ;;
+    land) cmd_land "$@" ;;
+    rename) cmd_rename "$@" ;;
+    pr-message) cmd_pr_message "$@" ;;
+    check) cmd_check "$@" ;;
+    hooks) cmd_hooks "$@" ;;
+    help | -h | --help) usage ;;
+    *) usage; exit 1 ;;
+esac

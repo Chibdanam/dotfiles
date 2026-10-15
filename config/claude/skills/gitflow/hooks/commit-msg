@@ -1,0 +1,19 @@
+#!/bin/bash
+# Refuses a message with a gf.forbidden pattern, and a message without body on
+# a ticket branch (PR/#<id>-<Name>) or for a merge on a branch. Leaves are
+# free: their commits end up squashed by gf land, which checks the final
+# message. So is a detached HEAD (throwaway QA merge, rebase).
+. "$(dirname "$(readlink -f "$0")")/../scripts/lib.sh"
+
+require_body=0
+if branch=$(git symbolic-ref -q --short HEAD); then
+    gf_is_root "$branch" && require_body=1
+    git rev-parse -q --verify MERGE_HEAD > /dev/null && require_body=1
+fi
+[[ ${GF_REQUIRE_BODY:-} == 1 ]] && require_body=1
+
+if ! problems=$(gf_check_message "$1" "$require_body"); then
+    printf 'commit-msg (gitflow): %s\n' "$problems" >&2
+    echo "commit-msg (gitflow): message kept in $(git rev-parse --git-path COMMIT_EDITMSG)" >&2
+    exit 1
+fi
