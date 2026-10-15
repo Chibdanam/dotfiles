@@ -18,6 +18,10 @@
   side-by-side = true
 [pull]
   rebase = false
+[rebase]
+  updateRefs = true
+[rerere]
+  enabled = true
 [merge]
   tool = nvimdiff
   conflictstyle = diff3
