@@ -4,7 +4,7 @@
 
 | File | What it adds |
 |------|--------------|
-| `config/claude/CLAUDE.local.md` | never push without being told, ADO branch names, worktree naming, `--no-ff` merge body |
+| `config/claude/CLAUDE.local.md` | never push without being told, ADO ticket branches and local leaves, worktree naming, PR and `--no-ff` merge messages |
 | `config/claude/settings.local.json` | ask before `git push`, roslyn-ls and comment-diet plugins from the local work marketplace |
 | `config/claude/skills/gitflow/references/peren.md` | peren side of the shared gitflow skill: forbidden vocabulary, PRs in French, hooks, where the Topain worktrees are described |
 | `config/claude/skills/local-test-stack/` | proves the peren local test stack before a run |
