@@ -6,7 +6,7 @@
 |------|--------------|
 | `config/claude/CLAUDE.local.md` | never push without being told, ADO branch names, worktree naming, `--no-ff` merge body |
 | `config/claude/settings.local.json` | ask before `git push`, roslyn-ls and comment-diet plugins from the local work marketplace |
-| `config/claude/skills/gitflow/` | branch, split and merge procedure of the peren ADO repos |
+| `config/claude/skills/gitflow/references/peren.md` | peren side of the shared gitflow skill: forbidden vocabulary, PRs in French, hooks, where the Topain worktrees are described |
 | `config/claude/skills/local-test-stack/` | proves the peren local test stack before a run |
 | `config/claude/commands/brief.md` | `/brief`, the daily brief into the Obsidian note |
 | `config/opencode/opencode.jsonc` | opencode on the DGX LiteLLM gateway; the key goes in `~/.config/dgx/token` |
