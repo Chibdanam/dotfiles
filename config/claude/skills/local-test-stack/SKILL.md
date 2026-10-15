@@ -77,7 +77,7 @@ http://localhost:4302/retailer/` d'abord. Puis
 - Rouges connus du dossier Demat : « Lignes exclues d'un tiers » (documenté dans sa définition) et « Reçu exclu de la
   facturation » (station Tokheim non mappée, correctif `PR/#NOWI-TokheimUnmappedStation` non mergé). Pour jouer avec
   des correctifs non mergés : dans `~/dev/wt-peren-topain-qa`, en HEAD détaché, un `merge --no-ff` par correctif
-  (skill `gitflow`, §9). Jamais un worktree de plus.
+  (instructions de la squad Multica Topain, « Working trees »). Jamais un worktree de plus.
 - Un `Inconclusive` à la première passe d'un scénario neuf vient de ses captures « Added » : la deuxième passe tranche.
 - Une différence avec `Results/` n'est jamais du bruit. Chaque fichier que le run modifie ou ajoute s'analyse : le
   champ qui change, sa cause (code de la branche, scénario, pile locale, date du run), légitime ou défaut. Le bilan
