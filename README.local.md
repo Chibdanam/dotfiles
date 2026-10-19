@@ -5,3 +5,4 @@
 | File | What it adds |
 |------|--------------|
 | `config/claude/CLAUDE.local.md` | always push to origin after committing |
+| `scripts/modules/tools.local.sh` | opencode v2 (the shared module installs no opencode) |
