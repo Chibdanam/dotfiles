@@ -1,0 +1,26 @@
+{
+    // Orange tint marking the SSH remote windows, one variant per Windows color
+    // scheme (window.autoDetectColorScheme switches the theme, the tint follows it).
+    "workbench.colorCustomizations": {
+        "[*Light*]": {
+            "titleBar.activeBackground": "#FFEAD0",
+            "titleBar.activeForeground": "#453518",
+            "titleBar.inactiveBackground": "#FFDFB5",
+            "titleBar.inactiveForeground": "#796543",
+            "sideBar.background": "#FFF2E3",
+            "sideBar.foreground": "#453518",
+            "sideBarTitle.foreground": "#453518",
+            "sideBarSectionHeader.background": "#FFE7C8"
+        },
+        "[*Dark*]": {
+            "titleBar.activeBackground": "#473319",
+            "titleBar.activeForeground": "#FFDFB5",
+            "titleBar.inactiveBackground": "#332613",
+            "titleBar.inactiveForeground": "#B59A7B",
+            "sideBar.background": "#2C2112",
+            "sideBar.foreground": "#F4DDC1",
+            "sideBarTitle.foreground": "#F4DDC1",
+            "sideBarSectionHeader.background": "#372A17"
+        }
+    }
+}

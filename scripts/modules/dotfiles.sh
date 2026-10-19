@@ -95,6 +95,12 @@ copy_dotfiles() {
         echo "  - VS Code WSL machine settings"
         mkdir -p "$HOME/.vscode-server/data/Machine"
         cp "$DOTFILES_DIR/config/vscode/machine-settings.json" "$HOME/.vscode-server/data/Machine/settings.json"
+    else
+        # VS Code machine settings of an SSH remote: the same tint in orange,
+        # telling its windows from local and WSL ones.
+        echo "  - VS Code SSH machine settings"
+        mkdir -p "$HOME/.vscode-server/data/Machine"
+        cp "$DOTFILES_DIR/config/vscode/machine-settings-ssh.json" "$HOME/.vscode-server/data/Machine/settings.json"
     fi
 
     echo "Dotfiles copied!"

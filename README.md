@@ -244,7 +244,9 @@ the distro filesystem (`\\wsl.localhost\...`) work. URLs and shell handlers
 
 `config/vscode/machine-settings.json` goes to `~/.vscode-server/data/Machine/settings.json`:
 the yellow title bar and side bar that set WSL windows apart, with a light and a dark
-variant (`[*Light*]` / `[*Dark*]`) so it follows the Windows color scheme.
+variant (`[*Light*]` / `[*Dark*]`) so it follows the Windows color scheme. On a native
+Linux box, reached from VS Code over SSH, `config/vscode/machine-settings-ssh.json` goes
+there instead: the same tint in orange.
 
 ## Directory Structure
 
@@ -260,7 +262,7 @@ dotfiles/
 │   ├── ohmyposh/zen.toml   # Prompt theme
 │   ├── herdr/              # Herdr config + space sessionizer
 │   ├── tmux/tmux.conf
-│   ├── vscode/             # VS Code machine settings of the WSL remote
+│   ├── vscode/             # VS Code machine settings of the WSL and SSH remotes
 │   └── zsh/                # Zsh configs
 ├── scripts/
 │   └── modules/            # Install modules
