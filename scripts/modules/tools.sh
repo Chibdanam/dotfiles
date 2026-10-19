@@ -56,6 +56,10 @@ install_tools() {
     echo "Installing lazydocker..."
     mise use --global lazydocker@latest
 
+    # Install the bruno CLI (`bru`, runs API collections)
+    echo "Installing bruno..."
+    mise use --global npm:@usebruno/cli@latest
+
     # Install uv. Comes before any pipx:* tool: mise installs those through uv.
     echo "Installing uv..."
     mise use --global uv@latest

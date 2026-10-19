@@ -148,6 +148,7 @@ New files need no mechanism: skills, commands and `config/zsh/*.zsh` are picked 
 | lazygit | mise | Git TUI |
 | bottom | mise | System monitor (`btm`) |
 | lazydocker | mise | Docker TUI |
+| bruno | mise (npm) | API collection runner (`bru`) |
 | uv | mise | Python package manager; backs mise's `pipx:` tools |
 | claude-swap | mise (pipx) | Switch between Claude accounts |
 | gh | mise | GitHub CLI |
