@@ -11,6 +11,6 @@
 | `config/claude/commands/brief.md` | `/brief`, the daily brief into the Obsidian note |
 | `config/opencode/opencode.jsonc` | opencode on the DGX LiteLLM gateway; the key goes in `~/.config/dgx/token` |
 | `config/lazygit/config.local.yml`, `config/zsh/lazygit.local.zsh` | colours for `PR/#…` and `Integration/` branches |
-| `scripts/modules/tools.local.sh` | python, bruno and postman-cli through mise |
+| `scripts/modules/tools.local.sh` | python and postman-cli through mise, opencode v1 (the shared module installs no opencode) |
 | `scripts/modules/dotnet.local.sh` | Azure Artifacts NuGet credential provider |
 | `scripts/modules/dotfiles.local.sh` | deploys the opencode and lazygit files above |
