@@ -58,8 +58,14 @@ directory = "~/.herdr/worktrees"
 new_cwd = "follow"
 
 [theme]
+# Dark follows the host terminal's ANSI palette; light uses herdr's native
+# Catppuccin Latte. Windows Terminal sends no light/dark notification, so the
+# switch happens when herdr re-reads the host colors: on attach, on resize, or
+# on `kill -WINCH <herdr client pid>`.
 name = "terminal"
-auto_switch = false
+auto_switch = true
+dark_name = "terminal"
+light_name = "catppuccin-latte"
 
 # --- (2) Session persistence: the herdr analog to tmux-resurrect +
 # tmux-continuum. Restores agent panes into their native conversation
