@@ -14,8 +14,8 @@ setup_git() {
     local git_name=""
     local git_email=""
 
-    current_git_name="$(git config --global --get user.name || true)"
-    current_git_email="$(git config --global --get user.email || true)"
+    current_git_name="$(git config --global --includes --get user.name || true)"
+    current_git_email="$(git config --global --includes --get user.email || true)"
 
     # Copy gitconfig
     cp "$DOTFILES_DIR/config/git/.gitconfig" "$HOME/.gitconfig"
