@@ -8,8 +8,13 @@ _update_all_apt() {
 	sudo apt-get update -qq || return
 	# --with-new-pkgs mirrors what `apt upgrade` does: pull in new dependencies
 	# rather than hold a package back. apt-get is the CLI that's stable for
-	# scripts; plain `apt` warns about exactly this use.
-	sudo apt-get --with-new-pkgs upgrade -y
+	# scripts; plain `apt` warns about exactly this use. confdef and confold:
+	# dpkg keeps a locally modified config file without asking, so a run with
+	# no terminal never waits on a question. The optional sudo rule of
+	# local-manager (plugins/updates/README.md) names exactly these command
+	# lines: change both together.
+	sudo apt-get -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold \
+		--with-new-pkgs upgrade -y
 }
 
 _update_all_mise() {
@@ -49,10 +54,14 @@ update-all() {
 
 	local -a _ua_ok _ua_failed _ua_skipped
 
-	# Prime the sudo timestamp up front. Otherwise the password prompt lands
-	# minutes into the run, whenever the apt or snap step is reached, and blocks
-	# there unnoticed.
-	if ! sudo -v; then
+	# local-manager's panel runs update-all with no terminal. A sudo rule set up
+	# by hand (its plugins/updates/README.md) lets apt and snap run there
+	# without a password. Without the rule, a terminal primes the sudo
+	# timestamp up front, or the password
+	# prompt would land minutes into the run, whenever the apt or snap step is
+	# reached, and block there unnoticed. Without either, apt and snap fail
+	# fast and the rest goes on.
+	if ! sudo -n -l /usr/bin/apt-get update -qq > /dev/null 2>&1 && [[ -t 0 ]] && ! sudo -v; then
 		print -u2 "update-all: sudo unavailable, aborting"
 		return 1
 	fi
