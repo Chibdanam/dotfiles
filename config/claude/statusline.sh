@@ -31,6 +31,48 @@ c = d.get('workspace', {}).get('current_dir', '')
 u = d.get('context_window', {}).get('used_percentage')
 e = (d.get('effort') or {}).get('level') or ''
 s = (d.get('output_style') or {}).get('name') or ''
+
+# The plan's limits, kept for local-manager's Claude widget: latest.json at
+# most once a minute, and history.jsonl when a percentage moves. Whatever
+# happens here, the line still prints.
+def keep_limits(limits):
+    import os, time
+    state = os.path.join(os.environ.get('XDG_STATE_HOME') or os.path.expanduser('~/.local/state'), 'claude-limits')
+    latest = os.path.join(state, 'latest.json')
+    try:
+        with open(latest) as f:
+            last = json.load(f)
+    except (OSError, ValueError):
+        last = {}
+    used = lambda kept: [(kept.get(k) or {}).get('used_percentage') for k in ('five_hour', 'seven_day')]
+    now = int(time.time())
+    moved = used(last.get('rate_limits') or {}) != used(limits)
+    if not moved and now - last.get('at', 0) < 60:
+        return
+    os.makedirs(state, exist_ok=True)
+    entry = json.dumps({'at': now, 'rate_limits': limits}, separators=(',', ':'))
+    temporary = latest + '.' + str(os.getpid())
+    with open(temporary, 'w') as f:
+        f.write(entry)
+    os.replace(temporary, latest)
+    if moved:
+        history = os.path.join(state, 'history.jsonl')
+        with open(history, 'a') as f:
+            f.write(entry + '\n')
+        if os.path.getsize(history) > 512 * 1024:
+            with open(history) as f:
+                lines = f.readlines()
+            temporary = history + '.' + str(os.getpid())
+            with open(temporary, 'w') as f:
+                f.writelines(lines[len(lines) // 2:])
+            os.replace(temporary, history)
+
+try:
+    if d.get('rate_limits'):
+        keep_limits(d['rate_limits'])
+except Exception:
+    pass
+
 print('\x1f'.join([m, p, c, str(u if u is not None else -1), e, s]))
 "
 )
