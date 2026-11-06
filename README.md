@@ -242,6 +242,15 @@ Installed by the `dotfiles` module only when `/proc/version` reports WSL.
 the distro filesystem (`\\wsl.localhost\...`) work. URLs and shell handlers
 (`ii shell:Downloads`) are passed through untouched.
 
+`winbrowser url|path ...` opens links in the Windows default browser. It is
+`$BROWSER` (`.zshenv`) and the xdg handler of `http`, `https` and `text/html`
+(`~/.local/share/applications/winbrowser.desktop`, set with `xdg-mime default`),
+so `xdg-open`, `gh`, `az login`, Python's `webbrowser`... never start the Linux
+Chrome under WSLg. URLs reach the browser untouched through
+`rundll32 url.dll,FileProtocolHandler`; local files become `file://wsl.localhost/...`
+URLs. `localhost` dev servers are reachable from Windows with `networkingMode=mirrored`
+or the default localhost forwarding.
+
 `config/vscode/machine-settings.json` goes to `~/.vscode-server/data/Machine/settings.json`:
 the yellow title bar and side bar that set WSL windows apart, with a light and a dark
 variant (`[*Light*]` / `[*Dark*]`) so it follows the Windows color scheme. On a native

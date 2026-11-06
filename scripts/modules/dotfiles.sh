@@ -90,6 +90,28 @@ copy_dotfiles() {
         cp "$DOTFILES_DIR/bin/ii" "$HOME/.local/bin/ii"
         chmod +x "$HOME/.local/bin/ii"
 
+        # winbrowser: links opened from WSL go to the Windows default browser,
+        # not to a Linux Chrome drawn through WSLg. It is $BROWSER (.zshenv)
+        # and, through this desktop entry, the xdg handler of http(s) and html.
+        # Exec stays unquoted: xdg-open takes its first word, quotes included,
+        # as the command, and skips the entry when that is not found.
+        echo "  - WSL helper: winbrowser (default web browser)"
+        cp "$DOTFILES_DIR/bin/winbrowser" "$HOME/.local/bin/winbrowser"
+        chmod +x "$HOME/.local/bin/winbrowser"
+        mkdir -p "$HOME/.local/share/applications"
+        cat > "$HOME/.local/share/applications/winbrowser.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=Windows browser
+Comment=Open links in the Windows default browser instead of a Linux one under WSLg
+Exec=$HOME/.local/bin/winbrowser %u
+NoDisplay=true
+MimeType=x-scheme-handler/http;x-scheme-handler/https;text/html;
+EOF
+        if command -v xdg-mime > /dev/null 2>&1; then
+            xdg-mime default winbrowser.desktop x-scheme-handler/http x-scheme-handler/https text/html
+        fi
+
         # VS Code machine settings of the WSL remote: the yellow tint telling
         # WSL windows from Windows ones, in a light and a dark variant.
         echo "  - VS Code WSL machine settings"

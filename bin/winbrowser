@@ -1,0 +1,51 @@
+#!/bin/sh
+# winbrowser: open URLs and local files in the Windows default browser, from
+# inside WSL.
+#
+# It is $BROWSER (.zshenv) and the xdg handler of http, https and text/html
+# (dotfiles module), so a link opened from WSL lands in the Windows browser
+# instead of a Linux Chrome drawn through WSLg.
+#
+# Everything goes through rundll32 url.dll,FileProtocolHandler, which hands the
+# string to ShellExecute untouched (explorer.exe would split a URL on commas).
+# A local file, as a path or a file:// URL, becomes a Windows file URL first.
+# rundll32 is called by absolute path: the Windows PATH is not appended inside
+# WSL (/etc/wsl.conf, [interop] appendWindowsPath=false).
+
+RUNDLL32=/mnt/c/Windows/System32/rundll32.exe
+
+if [ "$#" -eq 0 ]; then
+    echo "usage: winbrowser url|path ..." >&2
+    exit 2
+fi
+
+status=0
+for target; do
+    case "$target" in
+        file:///*)
+            # already percent-encoded: keep it that way
+            path=${target#file://}
+            ;;
+        *://* | about:* | mailto:*)
+            "$RUNDLL32" url.dll,FileProtocolHandler "$target" || status=1
+            continue
+            ;;
+        *)
+            if [ ! -e "$target" ]; then
+                echo "winbrowser: $target: No such file or directory" >&2
+                status=1
+                continue
+            fi
+            path=$(printf '%s' "$target" | sed 's/%/%25/g; s/ /%20/g; s/#/%23/g; s/?/%3F/g')
+            ;;
+    esac
+
+    win=$(wslpath -a -w "$path") || { status=1; continue; }
+    win=$(printf '%s' "$win" | tr '\\' /)
+    case "$win" in
+        //*) url="file:$win" ;;     # //wsl.localhost/Distro/... (UNC)
+        *) url="file:///$win" ;;    # C:/...
+    esac
+    "$RUNDLL32" url.dll,FileProtocolHandler "$url" || status=1
+done
+exit $status
