@@ -7,3 +7,7 @@ export ZDOTDIR="${XDG_CONFIG_HOME:-$HOME/.config}/zsh"
 # See config/zsh/secrets.zsh.example.
 [[ -r "$ZDOTDIR/.secrets.zsh" ]] && source "$ZDOTDIR/.secrets.zsh"
 
+# WSL: CLIs open links in the Windows browser (bin/winbrowser, installed on WSL
+# only). A BROWSER already set by the parent, like VS Code's, is kept.
+[[ -x "$HOME/.local/bin/winbrowser" ]] && export BROWSER="${BROWSER:-$HOME/.local/bin/winbrowser}"
+
