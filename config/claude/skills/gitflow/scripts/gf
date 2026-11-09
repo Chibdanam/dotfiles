@@ -42,6 +42,15 @@ refs_inventory() {
     git for-each-ref --format='%(refname) %(objectname)' refs/heads refs/tags
 }
 
+# commit-tree ignores commit.gpgSign: the squash and the retag ask for it.
+sign_flag() {
+    if [[ $(git config --bool commit.gpgsign) == true ]]; then
+        echo -S
+    else
+        echo --no-gpg-sign
+    fi
+}
+
 cmd_start() {
     [[ $# -eq 3 ]] || gf_die "usage: gf start <id|NOWI> <Name> <base>"
     local id=$1 name=$2 base=$3 branch
@@ -137,7 +146,7 @@ cmd_land() {
     if [[ $keep == 1 ]]; then
         new=$leaf_tip
     else
-        new=$(git commit-tree "$leaf_tip^{tree}" -p "$parent_tip" -F "$msg")
+        new=$(git commit-tree "$leaf_tip^{tree}" -p "$parent_tip" "$(sign_flag)" -F "$msg")
     fi
     git update-ref -m "gf land: $leaf" "refs/heads/$parent" "$new" "$parent_tip"
     git switch --quiet "$parent"
@@ -185,7 +194,7 @@ cmd_rename() {
         IFS=$'\x1f' read -r an ae ad cn ce cd <<< "$meta"
         n=$(GIT_AUTHOR_NAME=$an GIT_AUTHOR_EMAIL=$ae GIT_AUTHOR_DATE=$ad \
             GIT_COMMITTER_NAME=$cn GIT_COMMITTER_EMAIL=$ce GIT_COMMITTER_DATE=$cd \
-            git commit-tree "$c^{tree}" "${args[@]}" -F "$msg")
+            git commit-tree "$c^{tree}" "${args[@]}" "$(sign_flag)" -F "$msg")
         map[$c]=$n
     done < <(git rev-list --reverse --topo-order --parents "$base..$old")
     newtip=${map[$oldtip]:-$oldtip}

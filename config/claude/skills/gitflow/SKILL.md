@@ -124,6 +124,11 @@ menée en français ne change pas la langue du commit qu'elle produit.
   push qui réécrit une branche distante, quel que soit le drapeau.
 - **Reformuler le merge en tête** (dépôt sans PR) sans changer arbre, parents ni date d'auteur :
   `GIT_COMMITTER_DATE="$(git show -s --format=%cI)" git commit --amend -F merge-msg.txt`.
+- **Commits signés** : sur une machine où `commit.gpgsign` vaut `true`, `gf land` et `gf rename`
+  signent ce qu'ils créent (`git commit-tree` ignore ce réglage, `gf` passe `-S`). Le hook `pre-push`
+  refuse un commit de `user.email` commité depuis `gf.signedSince` qui ne passe pas
+  `git verify-commit`. Un commit non signé se re-signe avant le push par `git rebase -f <base>`.
+  Exception assumée par l'utilisateur : `GF_ALLOW_UNSIGNED=1 git push …`.
 
 ## 8. Moments de contrôle humain (AskUserQuestion)
 

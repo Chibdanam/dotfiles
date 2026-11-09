@@ -2,13 +2,31 @@
 # Refuses to send a #NOWI branch (GF_ALLOW_NOWI=1 to override) and to rewrite
 # a remote branch, whatever the flag that forces it (GF_ALLOW_FORCE=1).
 # Deleting a remote branch stays allowed.
+# With commit.gpgsign on, my commits committed since gf.signedSince (all of
+# them when unset) must pass git verify-commit (GF_ALLOW_UNSIGNED=1).
 
 status=0
+check_signatures=0
+if [[ $(git config --bool commit.gpgsign) == true && ${GF_ALLOW_UNSIGNED:-} != 1 ]]; then
+    check_signatures=1
+    me=$(git config user.email)
+    since=$(git config gf.signedSince)
+    since=$([[ -n $since ]] && date -d "$since" +%s || echo 0)
+fi
+
 while read -r local_ref local_sha remote_ref remote_sha; do
     [[ $local_sha =~ ^0+$ ]] && continue
     if [[ $remote_ref == *"#NOWI"* && ${GF_ALLOW_NOWI:-} != 1 ]]; then
         echo "pre-push (gitflow): ${remote_ref#refs/heads/} has no work item: create one and gf rename the branch (GF_ALLOW_NOWI=1 to push anyway)" >&2
         status=1
+    fi
+    if [[ $check_signatures == 1 ]]; then
+        while read -r sha email committed; do
+            [[ $email == "$me" && $committed -ge $since ]] || continue
+            git verify-commit "$sha" < /dev/null > /dev/null 2>&1 && continue
+            echo "pre-push (gitflow): ${sha:0:9} is not signed by a key of gpg.ssh.allowedSignersFile: sign it again (git rebase -f <base>) or GF_ALLOW_UNSIGNED=1" >&2
+            status=1
+        done < <(git log --format='%H %ae %ct' "$local_sha" --not --remotes="$1")
     fi
     [[ $remote_sha =~ ^0+$ ]] && continue
     if ! git cat-file -e "$remote_sha^{commit}" 2> /dev/null ||

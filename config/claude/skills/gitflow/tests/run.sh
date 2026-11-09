@@ -183,6 +183,37 @@ git switch -q --detach
 git worktree remove --force "$ROOT/wt"
 git switch -q 'PR/#100-Feature'
 
+# Signed commits: the leaf landed just above was committed unsigned
+ssh-keygen -q -t ed25519 -N "" -C me -f "$ROOT/signing"
+echo "me@example.com $(cat "$ROOT/signing.pub")" > "$ROOT/allowed_signers"
+git config gpg.format ssh
+git config user.signingkey "$ROOT/signing.pub"
+git config gpg.ssh.allowedSignersFile "$ROOT/allowed_signers"
+git config commit.gpgsign true
+expect_fail "push an unsigned commit refused" git push -q origin 'PR/#100-Feature'
+expect "push an unsigned commit with override" env GF_ALLOW_UNSIGNED=1 git push -q origin 'PR/#100-Feature'
+"$GF" split Signed > /dev/null
+echo s > s.txt
+git add s.txt
+git commit -qm "Signed leaf"
+expect "land a leaf while signing" "$GF" land -F "$ROOT/msg"
+expect "the squash is signed" git verify-commit HEAD
+expect "push signed commits" git push -q origin 'PR/#100-Feature'
+echo u > u.txt
+git add u.txt
+git commit -q --no-gpg-sign -m "Unsigned" -m "Body."
+git config gf.signedSince "$(date -d tomorrow --iso-8601=seconds)"
+expect "push an unsigned commit older than gf.signedSince" git push -q origin 'PR/#100-Feature'
+git config --unset gf.signedSince
+"$GF" start 400 Signed main > /dev/null
+echo r > r.txt
+git add r.txt
+git commit -qm "Retag me" -m "Body."
+expect "rename while signing" "$GF" rename 'PR/#400-Signed' 'PR/#401-Signed' main
+expect "the retagged commit is signed" git verify-commit 'PR/#401-Signed'
+git switch -q 'PR/#100-Feature'
+git config --unset commit.gpgsign
+
 # Rename an old-style branch with merges and sub-branch tags
 "$GF" start 300 Old main > /dev/null
 echo o > o.txt
