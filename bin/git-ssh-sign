@@ -1,0 +1,5 @@
+#!/bin/sh
+# gpg.ssh.program: git signs through the agent of ssh-agent.zsh, even from a
+# process started before that agent (an open Claude Code session, VS Code).
+export SSH_AUTH_SOCK="$HOME/.ssh/agent.sock"
+exec ssh-keygen "$@"

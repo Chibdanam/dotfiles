@@ -80,6 +80,12 @@ copy_dotfiles() {
     cp "$DOTFILES_DIR/bin/init-vscode" "$HOME/.local/bin/init-vscode"
     chmod +x "$HOME/.local/bin/init-vscode"
 
+    # git-ssh-sign: gpg.ssh.program of the machines that sign their commits
+    # (set in ~/.gitconfig.local), through the agent of ssh-agent.zsh.
+    echo "  - Helper: git-ssh-sign"
+    cp "$DOTFILES_DIR/bin/git-ssh-sign" "$HOME/.local/bin/git-ssh-sign"
+    chmod +x "$HOME/.local/bin/git-ssh-sign"
+
     # WSL-only integrations, skipped on a native Linux box where there's no
     # Windows side.
     if grep -qiE '(microsoft|wsl)' /proc/version 2>/dev/null; then
