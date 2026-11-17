@@ -53,9 +53,13 @@ install_dotnet() {
     echo "Installing microsoft.sqlpackage..."
     mise use --global dotnet:microsoft.sqlpackage@latest
 
-    # Install powershell
+    # Install powershell. It does not stop the module: a release can reach
+    # NuGet before its per-platform package (powershell.linux-x64), and
+    # @latest then fails until that package lands.
     echo "Installing powershell..."
-    mise use --global dotnet:powershell@latest
+    if ! mise use --global dotnet:powershell@latest; then
+        add_notice "powershell was not installed, its latest release has no package for this platform yet: retry later with 'mise use --global dotnet:powershell@latest'"
+    fi
 
     add_notice "Open a new shell so mise puts the .NET global tools on PATH (Neovim's roslyn_ls and conform.nvim resolve them from there)."
 
