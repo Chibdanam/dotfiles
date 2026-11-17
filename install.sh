@@ -38,8 +38,10 @@ print_error() {
 }
 
 # Where the modules install their binaries. Each module runs in its own
-# subshell, so what one adds to PATH would not reach the next.
-export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+# subshell, so what one adds to PATH would not reach the next. The mise shims
+# are there for the tools mise installs: without them the claude module does
+# not see rtk on a fresh machine and skips its hook.
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.local/share/mise/shims:$PATH"
 
 # Action items modules can defer until the end of the install run,
 # so they don't get lost in the middle of a long output stream.
