@@ -17,8 +17,9 @@ GF=~/.claude/skills/gitflow/scripts/gf
 $GF help
 ```
 
-Avant de travailler dans un dépôt, lire sa référence si elle existe : `references/<dépôt>.md`
-(vocabulaire interdit, langue des PR, branches d'intégration).
+Avant de travailler dans un dépôt, lire sa référence si elle existe : `references/<dépôt>.md`, ou le
+skill `<dépôt>:gitflow-reference` qu'un plugin fournit (vocabulaire interdit, langue des PR, branches
+d'intégration).
 
 ## 1. Un travail commence par un work item
 
