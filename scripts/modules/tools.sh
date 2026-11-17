@@ -36,6 +36,18 @@ install_tools() {
         echo "codegraph already installed"
     fi
 
+    # Install OpenCode 2 into ~/.opencode/bin, already on PATH via .zshrc; the
+    # installer also drops an `opencode2` alias next to it. An existing V1
+    # install moves over with `opencode upgrade --major`.
+    # --no-modify-path: the installer would otherwise append to the versioned
+    # .zshrc. Self-updates with `opencode upgrade`, run by update-all.
+    if [[ ! -x "$HOME/.opencode/bin/opencode" ]]; then
+        echo "Installing opencode..."
+        curl -fsSL https://opencode.ai/v2/install | bash -s -- --no-modify-path
+    else
+        echo "opencode already installed"
+    fi
+
     # Install zoxide
     echo "Installing zoxide..."
     mise use --global zoxide@latest
