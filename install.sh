@@ -37,23 +37,42 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Where the modules install their binaries. Each module runs in its own
+# subshell, so what one adds to PATH would not reach the next.
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
 # Action items modules can defer until the end of the install run,
 # so they don't get lost in the middle of a long output stream.
-POST_INSTALL_NOTICES=()
+# In a file, not an array: a module's subshell could not append to it.
+NOTICES_FILE="$(mktemp)"
+trap 'rm -f "$NOTICES_FILE"' EXIT
 
 add_notice() {
-    POST_INSTALL_NOTICES+=("$1")
+    printf '%s\n' "$1" >> "$NOTICES_FILE"
 }
 
 print_notices() {
-    if [[ ${#POST_INSTALL_NOTICES[@]} -eq 0 ]]; then
+    if [[ ! -s "$NOTICES_FILE" ]]; then
         return
     fi
     echo ""
     echo -e "${YELLOW}Action items:${NC}"
-    for notice in "${POST_INSTALL_NOTICES[@]}"; do
+    local notice
+    while IFS= read -r notice; do
         echo -e "  ${YELLOW}-${NC} $notice"
-    done
+    done < "$NOTICES_FILE"
+}
+
+# A failed module is reported at the end; the modules after it still run.
+FAILED_MODULES=()
+
+print_failures() {
+    if [[ ${#FAILED_MODULES[@]} -eq 0 ]]; then
+        return
+    fi
+    echo ""
+    print_error "Failed modules: ${FAILED_MODULES[*]}"
+    echo "  Fix the cause above, then re-run them: ./install.sh ${FAILED_MODULES[*]}"
 }
 
 # Available modules
@@ -104,10 +123,26 @@ run_module() {
     fi
     
     print_header "Installing: ${MODULES[$module]}"
-    source "$script"
-    # A branch layered on this one adds steps to a module without editing it
-    if [[ -f "$MODULES_DIR/$module.local.sh" ]]; then
-        source "$MODULES_DIR/$module.local.sh"
+    # In a subshell: a module sets -e, and its failure must end the module,
+    # not the install. Run as a plain command, not as a condition, where
+    # bash would ignore -e inside it.
+    local status=0
+    set +e
+    (
+        set -e
+        source "$script"
+        # A branch layered on this one adds steps to a module without editing it
+        if [[ -f "$MODULES_DIR/$module.local.sh" ]]; then
+            source "$MODULES_DIR/$module.local.sh"
+        fi
+    )
+    status=$?
+    set -e
+
+    if [[ $status -ne 0 ]]; then
+        print_error "Module '$module' failed (exit $status), moving on to the next one"
+        FAILED_MODULES+=("$module")
+        return 0
     fi
     print_success "Module '$module' completed"
 }
@@ -131,14 +166,20 @@ install_all() {
         run_module "$module"
     done
     
-    print_header "Installation Complete!"
+    if [[ ${#FAILED_MODULES[@]} -eq 0 ]]; then
+        print_header "Installation Complete!"
+    else
+        print_header "Installation finished with failures"
+    fi
     echo ""
     echo "Next steps:"
     echo "  1. Log out and log back in (for shell change)"
     echo "  2. Open a new terminal"
     echo "  3. Run 'nvim' to install plugins"
     print_notices
+    print_failures
     echo ""
+    [[ ${#FAILED_MODULES[@]} -eq 0 ]]
 }
 
 # Main
@@ -155,7 +196,7 @@ main() {
     
     if [[ "$1" == "all" ]]; then
         install_all
-        exit 0
+        exit $?
     fi
     
     # Install specific modules
@@ -169,8 +210,12 @@ main() {
         run_module "$module"
     done
 
-    print_success "Done!"
+    if [[ ${#FAILED_MODULES[@]} -eq 0 ]]; then
+        print_success "Done!"
+    fi
     print_notices
+    print_failures
+    [[ ${#FAILED_MODULES[@]} -eq 0 ]]
 }
 
 main "$@"

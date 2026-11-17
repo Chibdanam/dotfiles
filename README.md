@@ -265,8 +265,10 @@ dotfiles/
 
 ## Troubleshooting
 
-If an install step dies partway through (network blip, transient apt
-failure, etc.), it's safe to just re-run:
+A module that fails (network blip, transient apt failure, a package missing
+upstream) does not stop the install: the modules after it still run, and the
+end of the run lists the failed ones with the command that re-runs them. It's
+safe to just re-run:
 
 ```bash
 ./install.sh all          # picks up where it left off
