@@ -73,6 +73,10 @@ install_claude_config() {
     mkdir -p "$TARGET_DIR/skills" "$TARGET_DIR/commands"
 
     install_layered settings.json merge_json
+    # ${HOME} written in settings becomes the home of the installing account:
+    # it is not /home/<user> everywhere (a directory account's home carries
+    # its domain), and settings.json takes absolute paths only.
+    sed -i "s|\${HOME}|$HOME|g" "$TARGET_DIR/settings.json"
     install_layered CLAUDE.md merge_markdown
 
     cp "$SOURCE_DIR/statusline.sh" "$TARGET_DIR/statusline.sh"

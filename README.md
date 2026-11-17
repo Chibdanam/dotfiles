@@ -91,7 +91,7 @@ Where a layer needs to change a shared file, it ships a tracked `.local` variant
 
 | Layer file | Applied by | Rule |
 |------------|------------|------|
-| `config/claude/settings.local.json` | `claude` module | deep merge into `settings.json`: a key it sets wins, objects merge key by key, arrays gain its entries |
+| `config/claude/settings.local.json` | `claude` module | deep merge into `settings.json`: a key it sets wins, objects merge key by key, arrays gain its entries; `${HOME}` in the result becomes the installing account's home |
 | `config/claude/CLAUDE.local.md` | `claude` module | merged by `## ` section: a repeated heading replaces the shared section, new headings are appended; text above its first `## ` is not merged |
 | `scripts/modules/<module>.local.sh` | `install.sh`, right after `<module>` | extra install steps |
 | `config/zsh/*.local.zsh` | `.zshrc`, after every other `*.zsh` | redefinitions win |
