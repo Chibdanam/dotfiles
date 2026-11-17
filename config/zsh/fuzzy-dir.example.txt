@@ -1,6 +1,5 @@
-# Sessionizer extra search roots — read by BOTH pickers:
-#   - config/tmux/sessionizer.sh  (`tf` command and the tmux `prefix + j` popup)
-#   - config/herdr/sessionizer.sh (`f` command and the herdr `prefix + j` pane)
+# Sessionizer extra search roots — read by the `f` command (config/zsh/fuzzy-dir.zsh)
+# and the herdr `prefix + j` pane (config/herdr/sessionizer.sh).
 #
 # f() ALWAYS lists the immediate subdirectories of ~/dev (that default root is
 # baked into the script). List one EXTRA root per line here and f() will also

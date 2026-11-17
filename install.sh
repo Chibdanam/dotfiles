@@ -3,7 +3,7 @@
 # Usage: ./install.sh [module|all]
 #   e.g. ./install.sh all
 #        ./install.sh nvim
-#        ./install.sh zsh tmux
+#        ./install.sh zsh herdr
 
 set -euo pipefail
 
@@ -60,7 +60,6 @@ print_notices() {
 declare -A MODULES=(
     ["apt"]="System dependencies (build-essential, curl, etc.)"
     ["zsh"]="Zsh shell and oh-my-posh"
-    ["tmux"]="Tmux terminal multiplexer"
     ["herdr"]="Herdr terminal workspace manager"
     ["nvim"]="Neovim (latest stable from GitHub)"
     ["mise"]="mise runtime manager"
@@ -75,7 +74,7 @@ declare -A MODULES=(
 )
 
 # Order for full install
-INSTALL_ORDER=(apt ssh zsh tmux herdr nvim mise node rust dotnet tools claude git dotfiles)
+INSTALL_ORDER=(apt ssh zsh herdr nvim mise node rust dotnet tools claude git dotfiles)
 
 show_help() {
     echo "Dotfiles Bootstrap Script"
@@ -90,7 +89,7 @@ show_help() {
     echo "Examples:"
     echo "  ./install.sh all          # Install everything"
     echo "  ./install.sh nvim         # Install only neovim"
-    echo "  ./install.sh zsh tmux     # Install zsh and tmux"
+    echo "  ./install.sh zsh herdr    # Install zsh and herdr"
     echo ""
     echo "After installation, open a new shell to load the prompt and tools"
 }

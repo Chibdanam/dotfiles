@@ -12,7 +12,7 @@
 # Search roots: ~/dev is always listed. Extra roots -- for monorepos whose
 # projects live in nested folders -- are read from
 # ~/.config/zsh/fuzzy-dir.local.txt (one path per line; '#' comments and blank
-# lines ignored), the same file the tmux sessionizer uses. Each root is scanned
+# lines ignored), the same file the `f` shell function reads. Each root is scanned
 # ONE level deep; dot-folders and git-ignored paths (bin/, obj/, node_modules/,
 # ...) are pruned automatically. See config/zsh/fuzzy-dir.example.txt.
 # -----------------------------------------------------------------------------

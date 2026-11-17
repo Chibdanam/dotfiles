@@ -21,7 +21,6 @@ Install specific components:
 ```bash
 ./install.sh apt        # System dependencies (build-essential, curl, etc.)
 ./install.sh zsh        # Zsh + oh-my-posh
-./install.sh tmux       # Tmux
 ./install.sh herdr      # Herdr terminal workspace manager
 ./install.sh nvim       # Neovim
 ./install.sh mise       # mise runtime manager
@@ -40,11 +39,11 @@ Or combine:
 ./install.sh apt zsh nvim
 ```
 
-Tmux and oh-my-posh intentionally inherit colors from the SSH client terminal.
+oh-my-posh intentionally inherits colors from the SSH client terminal.
 
 `init-vscode` (from `bin/`, on PATH after the `dotfiles` module), run anywhere inside a .NET git repository, sets that repository up for attach-debugging from VS Code, at its root: the apps keep starting from a terminal (`dotnet run`, mise) and VS Code only attaches. It writes `.vscode/running-apps.sh` and merges two "Attach" entries into `.vscode/launch.json`: a picker of the repo's running apps not yet debugged, labelled by project and naming the session after it, plus the C# extension's own process picker as a fallback. It only reports until it is given `--apply`; re-running it is a no-op, it only refreshes what it marked as its own. It ends by checking what attaching depends on: `kernel.yama.ptrace_scope` must be 0 (Ubuntu ships 1, which makes every attach bind nothing) and the C# and Tasks Shell Input extensions must be installed on the WSL side.
 
-Herdr is the preferred terminal workspace manager (shell shortcut `f`); tmux is kept as a fallback (`tf`). The `herdr` module installs the binary from herdr.dev, and its config plus space sessionizer live in `config/herdr/` (copied by the `dotfiles` module). Runtime state (sockets, logs, `session.json`, worktrees) is intentionally not versioned.
+Herdr is the terminal workspace manager (shell shortcut `f`). The `herdr` module installs the binary from herdr.dev, and its config plus space sessionizer live in `config/herdr/` (copied by the `dotfiles` module). Runtime state (sockets, logs, `session.json`, worktrees) is intentionally not versioned.
 
 GitHub SSH setup is optional. Public bootstrap downloads use HTTPS by default so a fresh shell works before adding a GitHub SSH key.
 
@@ -61,7 +60,7 @@ Tracked config files are overwritten on each install. What differs per machine a
 | Live file | Purpose | Template | Seeded by |
 |-----------|---------|----------|-----------|
 | `~/.gitconfig.local` | git identity, gh credential helpers, `[personal]` identity for `gsp` | `config/git/gitconfig.local.example` | `git` module (seed-once) |
-| `~/.config/zsh/fuzzy-dir.local.txt` | extra sessionizer roots (herdr `f` and tmux `tf`, both `prefix + j` binds) | `config/zsh/fuzzy-dir.example.txt` | `dotfiles` module (seed-once) |
+| `~/.config/zsh/fuzzy-dir.local.txt` | extra sessionizer roots (herdr `f` and its `prefix + j` bind) | `config/zsh/fuzzy-dir.example.txt` | `dotfiles` module (seed-once) |
 | `~/.config/zsh/.secrets.zsh` | tokens / API keys | `config/zsh/secrets.zsh.example` | manual (`cp` + `chmod 600`) |
 | `~/.config/mise/config.toml` | mise tool pins, incl. extra work-only dotnet tools | — | `mise use --global` (manual) |
 | `~/.config/zsh/*.zsh` (any extra file) | free-form machine-local zsh — auto-sourced by the `.zshrc` glob, never deleted by installs | — | manual |
@@ -110,8 +109,7 @@ New files need no mechanism: skills, commands and `config/zsh/*.zsh` are picked 
 |------|--------------|-------------|
 | zsh | apt | Shell with zinit plugin manager |
 | oh-my-posh | curl | Prompt that inherits terminal colors |
-| tmux | apt | Terminal multiplexer with TPM |
-| herdr | curl | Terminal workspace manager (preferred; tmux kept as fallback) |
+| herdr | curl | Terminal workspace manager |
 
 #### Editor
 
@@ -196,16 +194,6 @@ New files need no mechanism: skills, commands and `config/zsh/*.zsh` are picked 
 | `prefix + Shift + o` | Open git worktree |
 | `Ctrl + b` | Toggle sidebar |
 
-#### Tmux (prefix: Ctrl+A)
-| Key | Action |
-|-----|--------|
-| `prefix + \|` | Split vertical |
-| `prefix + -` | Split horizontal |
-| `prefix + j` | Sessionizer popup (select project, create/attach session) |
-| `prefix + r` | Reload config |
-| `Ctrl + h/j/k/l` | Navigate panes |
-| `Alt + 1-5` | Switch windows |
-
 #### Neovim (leader: Space)
 | Key | Action |
 |-----|--------|
@@ -225,7 +213,6 @@ New files need no mechanism: skills, commands and `config/zsh/*.zsh` are picked 
 | Key | Action |
 |-----|--------|
 | `f` | Herdr space sessionizer (select `~/dev` project, focus/create space with Claude/run/vim tabs) |
-| `tf` | Tmux sessionizer (fallback; select project, create/attach session) |
 | `ff` | Fuzzy find files, open in nvim |
 | `z <dir>` | Smart cd with zoxide |
 | `update-all` | Run every updater (apt, mise, Claude Code, herdr, codegraph, opencode, rustup, snap, zinit, nvim plugins); a failing step doesn't stop the rest, the summary lists ok / skipped / failed |
@@ -270,7 +257,6 @@ dotfiles/
 │   ├── nvim/               # Neovim config
 │   ├── ohmyposh/zen.toml   # Prompt theme
 │   ├── herdr/              # Herdr config + space sessionizer
-│   ├── tmux/tmux.conf
 │   ├── vscode/             # VS Code machine settings of the WSL and SSH remotes
 │   └── zsh/                # Zsh configs
 ├── scripts/

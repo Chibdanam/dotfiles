@@ -28,13 +28,12 @@ dev-project-dirs() {
     print -rl -- $out
 }
 
-# herdr sessionizer (preferred): pick a project with fzf, then switch to (or
-# create) its herdr space with a Claude / run / vim tab layout.
-# Falls back to the tmux sessionizer on machines without herdr (or jq).
+# herdr sessionizer: pick a project with fzf, then switch to (or create) its
+# herdr space with a Claude / run / vim tab layout.
 f() {
     if ! command -v herdr &>/dev/null || ! command -v jq &>/dev/null; then
-        tf
-        return
+        print -u2 "f: herdr and jq are required (./install.sh apt herdr)"
+        return 1
     fi
 
     local dir
@@ -77,12 +76,6 @@ f() {
 
     # Attach a client only when we're not already inside herdr.
     [[ -z $HERDR_ENV ]] && herdr
-}
-
-# Tmux sessionizer (fallback): kept alongside f() so tmux still works where
-# herdr isn't the driver. Shares its logic with the `prefix + j` tmux keybind.
-tf() {
-    "$HOME/.config/tmux/sessionizer.sh"
 }
 
 # Fuzzy file finder - open selected file in nvim
