@@ -1,0 +1,39 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "lsp": true,
+  "providers": {
+    // DGX LiteLLM gateway. The key stays out of this file: it lives in
+    // ~/.config/dgx/token (chmod 600), shared with LITELLM_API_KEY in zsh.
+    "dgx": {
+      "name": "DGX (LiteLLM)",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "http://192.168.1.164:4000/v1",
+        "apiKey": "{file:~/.config/dgx/token}"
+      },
+      "models": {
+        "glm-5.3-flash": {
+          "name": "GLM 5.3 Flash",
+          "limit": { "context": 500000, "output": 32768 }
+        },
+        // Legacy alias, now served by GLM 5.3 Flash on the gateway.
+        "qwen3.8-flash-next": {
+          "name": "Qwen3.8 Flash Next (→ GLM 5.3 Flash)",
+          "limit": { "context": 500000, "output": 32768 }
+        },
+        // opencode asks for 32000 output tokens by default, which fills this
+        // model's whole window; output mirrors the gateway's max_tokens.
+        "gemma4-e4b": {
+          "name": "Gemma 4 E4B",
+          "limit": { "context": 32768, "output": 2000 }
+        },
+        // Legacy alias, now served by Gemma 4 E4B on the gateway.
+        "gemma4-26b-thinking": {
+          "name": "Gemma 4 26B Thinking (→ Gemma 4 E4B)",
+          "limit": { "context": 32768, "output": 2000 }
+        }
+      }
+    }
+  },
+  "model": "dgx/glm-5.3-flash"
+}
