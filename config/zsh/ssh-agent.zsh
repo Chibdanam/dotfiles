@@ -8,8 +8,14 @@ if [[ $? -eq 2 ]]; then
     ssh-agent -a "$SSH_AUTH_SOCK" > /dev/null
 fi
 
-# The signing key's passphrase is typed once per boot and never stored.
-if [[ -o interactive && -f ~/.ssh/id_ed25519_signing.pub ]] &&
+# The signing key's passphrase is typed once per boot and never stored. A key
+# without passphrase (an agent VM, which signs with nobody around) loads by
+# itself: -P "" reads it only if it is not encrypted, and never prompts.
+if [[ -f ~/.ssh/id_ed25519_signing.pub ]] &&
     ! ssh-add -T ~/.ssh/id_ed25519_signing.pub > /dev/null 2>&1; then
-    print -P "%F{yellow}git: signing key not loaded, run ssh-add ~/.ssh/id_ed25519_signing%f"
+    if ssh-keygen -y -P "" -f ~/.ssh/id_ed25519_signing > /dev/null 2>&1; then
+        ssh-add -q ~/.ssh/id_ed25519_signing 2> /dev/null
+    elif [[ -o interactive ]]; then
+        print -P "%F{yellow}git: signing key not loaded, run ssh-add ~/.ssh/id_ed25519_signing%f"
+    fi
 fi
