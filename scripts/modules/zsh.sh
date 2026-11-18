@@ -6,6 +6,13 @@ set_default_shell_to_zsh() {
     local zsh_path
     zsh_path="$(which zsh)"
 
+    # The fallback of an earlier run is the answer: no chsh, no question.
+    local marker="# dotfiles: launch zsh for interactive shells"
+    if [[ -f "$HOME/.bashrc" ]] && grep -qF "$marker" "$HOME/.bashrc"; then
+        echo "~/.bashrc already launches zsh"
+        return 0
+    fi
+
     echo "Setting zsh as default shell..."
     if chsh -s "$zsh_path"; then
         return 0
@@ -16,22 +23,18 @@ set_default_shell_to_zsh() {
     echo "like Entra ID / SSSD / LDAP and isn't present in /etc/passwd)."
     echo ""
 
-    if [[ ! -t 0 ]]; then
-        echo "Non-interactive shell, skipping fallback. Change your default shell manually later."
-        return 0
-    fi
+    if [[ "${DOTFILES_UNATTENDED:-}" != 1 ]]; then
+        if [[ ! -t 0 ]]; then
+            echo "Non-interactive shell, skipping fallback. Change your default shell manually later."
+            return 0
+        fi
 
-    read -p "Fallback: add 'exec zsh' to ~/.bashrc so bash launches zsh on login? [y/N] " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "Skipping default shell change."
-        return 0
-    fi
-
-    local marker="# dotfiles: launch zsh for interactive shells"
-    if [[ -f "$HOME/.bashrc" ]] && grep -qF "$marker" "$HOME/.bashrc"; then
-        echo "~/.bashrc already contains the zsh launcher"
-        return 0
+        read -p "Fallback: add 'exec zsh' to ~/.bashrc so bash launches zsh on login? [y/N] " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Skipping default shell change."
+            return 0
+        fi
     fi
 
     cat >> "$HOME/.bashrc" <<EOF
