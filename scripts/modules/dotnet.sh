@@ -30,7 +30,7 @@ install_powershell() {
 # SDK in one root, so the tool finds it without a change to the global config.
 tool_runtime() {
     local answer major
-    answer=$(timeout 30 "$@" 2>&1 || true)
+    answer=$(timeout 30 "$@" < /dev/null 2>&1 || true)
     major=$(sed -n "s/.*Framework: 'Microsoft.NETCore.App', version '\([0-9]*\)\..*/\1/p" <<< "$answer" | head -n 1)
     if [[ -z "$major" ]]; then
         return

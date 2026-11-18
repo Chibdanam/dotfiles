@@ -49,7 +49,9 @@ ssh_host() {
 # ssh_registered <host> <accepted pattern> <where to paste the key> [command]:
 # a notice with the public key as long as <host> does not know it. These hosts
 # give no shell and exit non-zero either way, so the answer is read in what
-# they say, to [command] when a bare connection does not tell.
+# they say, to [command] when a bare connection does not tell. -n: a host that
+# runs [command] waits for the end of standard input, which never comes from a
+# terminal.
 ssh_registered() {
     local host="$1" accepted="$2" where="$3" command="${4:-}"
     local key
@@ -59,7 +61,7 @@ ssh_registered() {
         return
     fi
     local answer
-    answer=$(ssh -T -o BatchMode=yes -o ConnectTimeout=10 "git@$host" ${command:+"$command"} 2>&1 || true)
+    answer=$(ssh -n -T -o BatchMode=yes -o ConnectTimeout=10 "git@$host" ${command:+"$command"} 2>&1 || true)
     if grep -qE "$accepted" <<< "$answer"; then
         echo "  - $host: key accepted"
         return
