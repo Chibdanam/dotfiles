@@ -85,6 +85,7 @@ print_failures() {
 # Available modules
 declare -A MODULES=(
     ["apt"]="System dependencies (build-essential, curl, etc.)"
+    ["docker"]="Docker Engine, compose and buildx (left to Docker Desktop on WSL)"
     ["zsh"]="Zsh shell and oh-my-posh"
     ["herdr"]="Herdr terminal workspace manager"
     ["nvim"]="Neovim (latest stable from GitHub)"
@@ -100,7 +101,7 @@ declare -A MODULES=(
 )
 
 # Order for full install
-INSTALL_ORDER=(apt ssh zsh herdr nvim mise node rust dotnet tools claude git dotfiles)
+INSTALL_ORDER=(apt docker ssh zsh herdr nvim mise node rust dotnet tools claude git dotfiles)
 
 show_help() {
     echo "Dotfiles Bootstrap Script"

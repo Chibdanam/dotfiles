@@ -20,6 +20,7 @@ Install specific components:
 
 ```bash
 ./install.sh apt        # System dependencies (build-essential, curl, etc.)
+./install.sh docker     # Docker Engine + compose + buildx (not on WSL)
 ./install.sh zsh        # Zsh + oh-my-posh
 ./install.sh herdr      # Herdr terminal workspace manager
 ./install.sh nvim       # Neovim
@@ -46,6 +47,8 @@ oh-my-posh intentionally inherits colors from the SSH client terminal.
 Herdr is the terminal workspace manager (shell shortcut `f`). The `herdr` module installs the binary from herdr.dev, and its config plus space sessionizer live in `config/herdr/` (copied by the `dotfiles` module). Runtime state (sockets, logs, `session.json`, worktrees) is intentionally not versioned.
 
 Every module looks at what is in place before acting, so the install can be run again at any time: what is there is kept, what is missing is added, and the run ends with the "Action items" still open (a key to register, an account to log in). `./install.sh --yes all` (or `DOTFILES_UNATTENDED=1`) asks nothing: defaults everywhere and keys without passphrase, for a machine nobody sits at.
+
+The `docker` module installs Docker Engine from Docker's apt repository and puts the user in the `docker` group, which amounts to root on the machine. On WSL it does nothing: Docker comes from Docker Desktop there.
 
 The `ssh` module creates a key for GitHub and one for signing commits, each with its `~/.ssh/config` entry, unless that file already names the host or the key exists. Public bootstrap downloads use HTTPS, so a fresh shell works before the GitHub key is registered.
 
