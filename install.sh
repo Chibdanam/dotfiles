@@ -1,9 +1,14 @@
 #!/bin/bash
 # Dotfiles Bootstrap Script
-# Usage: ./install.sh [module|all]
+# Usage: ./install.sh [-y] [module...|all]
 #   e.g. ./install.sh all
 #        ./install.sh nvim
 #        ./install.sh zsh herdr
+#   -y, --yes (or DOTFILES_UNATTENDED=1): no question asked. What a question
+#   would have settled takes its default, and a key is created without
+#   passphrase: the mode of a machine nobody sits at.
+# Every module looks at what is in place first, so a re-run changes nothing
+# that is already there.
 
 set -euo pipefail
 
@@ -89,7 +94,7 @@ declare -A MODULES=(
     ["dotnet"]=".NET SDK + Roslyn LS + csharpier (via mise)"
     ["tools"]="Additional tools (Claude Code, rtk, codegraph, opencode, zoxide, delta, lazygit, bruno, gh, macchina)"
     ["claude"]="Claude Code global configuration and skills"
-    ["ssh"]="SSH key generation"
+    ["ssh"]="SSH keys and client config"
     ["git"]="Git configuration"
     ["dotfiles"]="Copy all dotfiles to home directory"
 )
@@ -100,7 +105,9 @@ INSTALL_ORDER=(apt ssh zsh herdr nvim mise node rust dotnet tools claude git dot
 show_help() {
     echo "Dotfiles Bootstrap Script"
     echo ""
-    echo "Usage: ./install.sh [module...] | all"
+    echo "Usage: ./install.sh [-y] [module...] | all"
+    echo ""
+    echo "  -y, --yes   Ask nothing: defaults everywhere, keys without passphrase"
     echo ""
     echo "Modules:"
     for module in "${!MODULES[@]}"; do
@@ -157,13 +164,15 @@ install_all() {
     done
     echo ""
     
-    read -p "Continue? [y/N] " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "Aborted."
-        exit 0
+    if [[ "${DOTFILES_UNATTENDED:-}" != 1 ]]; then
+        read -p "Continue? [y/N] " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Aborted."
+            exit 0
+        fi
     fi
-    
+
     for module in "${INSTALL_ORDER[@]}"; do
         run_module "$module"
     done
@@ -186,11 +195,16 @@ install_all() {
 
 # Main
 main() {
+    if [[ "${1:-}" == "-y" || "${1:-}" == "--yes" ]]; then
+        export DOTFILES_UNATTENDED=1
+        shift
+    fi
+
     if [[ $# -eq 0 ]]; then
         show_help
         exit 0
     fi
-    
+
     if [[ "$1" == "-h" || "$1" == "--help" ]]; then
         show_help
         exit 0
