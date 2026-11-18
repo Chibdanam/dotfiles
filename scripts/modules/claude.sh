@@ -103,6 +103,12 @@ install_claude_config() {
         echo "  - codegraph MCP + hook"
     fi
 
+    # Signing in opens a browser: the one step left to whoever sits there.
+    if command -v claude &> /dev/null &&
+        ! claude auth status 2> /dev/null | jq -e '.loggedIn' &> /dev/null; then
+        add_notice "Claude Code is not logged in: run 'claude auth login'"
+    fi
+
     echo "Claude Code configuration installed!"
     echo "  - Settings:  $TARGET_DIR/settings.json"
     echo "  - CLAUDE.md: $TARGET_DIR/CLAUDE.md"
