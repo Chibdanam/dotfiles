@@ -1,0 +1,37 @@
+# Fronts served by npm, the same from a terminal as from local-manager's panel
+# (its ADR 0016), in any checkout or worktree. The work is in ../front.sh.
+#
+#   mise r front:start <script>   npm i when needed, then npm run <script> in
+#                                 the background, output in
+#                                 ~/logs/<service>/log-<datetime>.log
+#   mise r front:stop <script>    stops it
+#   mise r front:sync             git pull --ff-only, then npm i when needed
+#   mise r front:deps [-f]        npm i when package.json or package-lock.json
+#                                 changed since the last one
+
+[tasks."front:start"]
+description = "npm i when needed, then npm run <script> in the background, output in ~/logs/<service>/"
+dir = "{{cwd}}"
+quiet = true
+usage = 'arg "<script>" help="a script of package.json, e.g. retailer:serve-devlocal"'
+run = 'bash "$HOME/.config/mise/front.sh" start "$usage_script"'
+
+[tasks."front:stop"]
+description = "Stop what front:start started, and what holds the port it serves"
+dir = "{{cwd}}"
+quiet = true
+usage = 'arg "<script>" help="a script of package.json, e.g. retailer:serve-devlocal"'
+run = 'bash "$HOME/.config/mise/front.sh" stop "$usage_script"'
+
+[tasks."front:sync"]
+description = "git pull --ff-only on the tracked branch, then npm i when needed"
+dir = "{{cwd}}"
+quiet = true
+run = 'bash "$HOME/.config/mise/front.sh" sync'
+
+[tasks."front:deps"]
+description = "npm i when package.json or package-lock.json changed since the last one (-f forces it)"
+dir = "{{cwd}}"
+quiet = true
+usage = 'flag "-f --force" help="npm install even if nothing changed"'
+run = 'bash "$HOME/.config/mise/front.sh" deps "$([ "${usage_force:-}" = true ] && echo -f)"'
