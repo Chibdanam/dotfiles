@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "ask": [
+      "Bash(git push *)"
+    ]
+  },
+  "enabledPlugins": {
+    "roslyn-ls@local": true,
+    "comment-diet@local": true,
+    "peren@local": true
+  },
+  "extraKnownMarketplaces": {
+    "local": {
+      "source": {
+        "source": "directory",
+        "path": "${HOME}/dev/AIMarketplace/confero-marketplace"
+      }
+    }
+  }
+}
