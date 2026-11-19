@@ -1,7 +1,8 @@
 #!/bin/bash
-# Claude Code statusline: model, project, git and context on one line.
+# Claude Code statusline: machine, model, project, git and context on one line.
 # Receives JSON on stdin. It runs on every refresh, so the usual run starts a
-# single process (jq); the rest is bash builtins and a 5 s git cache.
+# single process (jq); the rest is bash builtins and caches that hold what
+# rarely changes: the machine, the Claude account, git (5 s).
 
 US=$'\x1f'
 cache=${XDG_RUNTIME_DIR:-/tmp}/claude-statusline-$UID
@@ -74,6 +75,45 @@ if [[ -n $keep ]]; then
     } 2> /dev/null
 fi
 
+# Machine: name, virtualization and a color of its own, hashed from the name.
+# Only a reboot changes them, so systemd-detect-virt runs once per boot.
+host=${HOSTNAME%%.*}
+read -r boot 2> /dev/null < /proc/sys/kernel/random/boot_id
+IFS=$US read -r cached_boot cached_host virt host_color 2> /dev/null < "$cache/host"
+if [[ $cached_boot != "$boot" || $cached_host != "$host" ]]; then
+    virt=$(systemd-detect-virt 2> /dev/null)
+    case $virt in
+        none) virt= ;;
+        microsoft) virt=hyper-v ;;
+        oracle) virt=vbox ;;
+    esac
+    hash=0 name=${host,,}
+    for ((i = 0; i < ${#name}; i++)); do
+        printf -v code '%d' "'${name:i:1}"
+        ((hash = (hash * 31 + code) % 1000003))
+    done
+    palette=(33 37 69 99 135 168 172 208)
+    host_color=${palette[hash % ${#palette[@]}]}
+    printf '%s\x1f%s\x1f%s\x1f%s\n' "$boot" "$host" "$virt" "$host_color" > "$cache/host"
+fi
+
+# Claude account: the organization for a Team or Enterprise seat, "perso"
+# otherwise. The cache serves only while strictly newer than the config:
+# mtimes tick every few ms, so a config written in the same tick as the cache
+# is read again.
+config=${CLAUDE_CONFIG_DIR:-$HOME}/.claude.json
+org_cache=$cache/org${config//\//%}
+org=
+if [[ ! -f $config ]]; then
+    :
+elif [[ $org_cache -nt $config ]]; then
+    read -r org < "$org_cache"
+else
+    org=$(jq -r '.oauthAccount // empty
+        | if (.organizationType // "" | test("team|enterprise")) then .organizationName // "" else "perso" end' \
+        "$config" 2> /dev/null) && printf '%s\n' "$org" > "$org_cache"
+fi
+
 # Git, cached 5 s per directory: one git status gives the branch and counts.
 git_dir=${cwd:-$project_dir}
 if [[ -n $git_dir ]]; then
@@ -100,6 +140,12 @@ fi
 # --- Minimal rendering ---
 BOLD=$'\e[1m' DIM=$'\e[2m' RST=$'\e[0m'
 parts=()
+
+host_text=$'\e[38;5;'"${host_color}m${host}${RST}"
+[[ -n $SSH_CONNECTION ]] && host_text="${BOLD}⇄ ${host_text}"
+[[ -n $virt ]] && host_text+=" ${DIM}${virt}${RST}"
+[[ -n $org ]] && host_text+=" ${DIM}·${RST} ${org}"
+parts+=("$host_text")
 
 if [[ -n $model ]]; then
     model_text="${BOLD}${model}${RST}"
