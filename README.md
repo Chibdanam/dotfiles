@@ -249,6 +249,14 @@ variant (`[*Light*]` / `[*Dark*]`) so it follows the Windows color scheme. On a 
 Linux box, reached from VS Code over SSH, `config/vscode/machine-settings-ssh.json` goes
 there instead: the same tint in orange.
 
+On that SSH box, the `dotfiles` module also puts `bin/code` in `~/.local/bin`: `code <path>`
+from any terminal there (`az ssh`, herdr), not only VS Code's integrated one, opens the path
+in a new window of the laptop's VS Code. It goes through a Remote-SSH window already
+connected to the machine: it finds the newest `vscode-ipc-*.sock` a server of
+`~/.vscode-server` listens on and hands it to that server's `bin/remote-cli/code`. With no
+window connected, it falls back to another `code` on PATH if any, else prints the
+`code --remote ssh-remote+<host> <path>` command to run from the laptop.
+
 ## Directory Structure
 
 ```

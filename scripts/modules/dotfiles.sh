@@ -122,6 +122,14 @@ EOF
         echo "  - VS Code SSH machine settings"
         mkdir -p "$HOME/.vscode-server/data/Machine"
         cp "$DOTFILES_DIR/config/vscode/machine-settings-ssh.json" "$HOME/.vscode-server/data/Machine/settings.json"
+
+        # code: `code <path>` from any terminal of the SSH remote opens the
+        # laptop's VS Code on it, through a Remote-SSH window already connected.
+        # Not on WSL, where `code` comes from the Windows PATH.
+        echo "  - SSH helper: code"
+        mkdir -p "$HOME/.local/bin"
+        cp "$DOTFILES_DIR/bin/code" "$HOME/.local/bin/code"
+        chmod +x "$HOME/.local/bin/code"
     fi
 
     echo "Dotfiles copied!"

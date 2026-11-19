@@ -1,0 +1,66 @@
+#!/bin/sh
+# code — `code <path>` from any terminal of an SSH remote (az ssh, herdr), opening the
+# path in a new window of the laptop's VS Code, as VS Code's integrated terminal does.
+#
+# The server's own CLI (bin/remote-cli/code) only works when VSCODE_IPC_HOOK_CLI names
+# the socket of a running extension host, and VS Code sets it in its integrated terminal
+# only. This looks the socket up for any terminal: the newest vscode-ipc-*.sock that a
+# VS Code server of this account (~/.vscode-server) listens on, meaning a Remote-SSH
+# window connected to this machine right now. Nothing on this side can open a window on
+# the laptop otherwise: with no such window, it hands over to another `code` on PATH if
+# there is one, else prints the command that opens the path from the laptop.
+
+self=$(readlink -f "$0")
+
+# "<mtime> <socket> <server dir>" per socket a VS Code server of this account listens
+# on, newest first. The server dir holds both the node binary and bin/remote-cli/.
+live_sockets() {
+    ss -xlpn 2>/dev/null | awk '{
+        for (i = 1; i <= NF; i++)
+            if ($i ~ /\/vscode-ipc-[^\/]*\.sock$/ && match($0, /pid=[0-9]+/))
+                print $i, substr($0, RSTART + 4, RLENGTH - 4)
+    }' | while read -r sock pid; do
+        exe=$(readlink "/proc/$pid/exe" 2>/dev/null) || continue
+        case $exe in "$HOME"/.vscode-server/*) ;; *) continue ;; esac
+        printf '%s %s %s\n' "$(stat -c %Y "$sock" 2>/dev/null || echo 0)" "$sock" "${exe%/*}"
+    done | sort -rn
+}
+
+sockets=$(live_sockets)
+pick=
+# In an integrated terminal, the window it belongs to wins over the newest one.
+if [ -n "$VSCODE_IPC_HOOK_CLI" ]; then
+    pick=$(printf '%s\n' "$sockets" | awk -v s="$VSCODE_IPC_HOOK_CLI" '$2 == s' | head -n 1)
+fi
+[ -n "$pick" ] || pick=$(printf '%s\n' "$sockets" | head -n 1)
+
+if [ -n "$pick" ]; then
+    read -r _ sock dir <<EOF
+$pick
+EOF
+    if [ -x "$dir/bin/remote-cli/code" ]; then
+        VSCODE_IPC_HOOK_CLI=$sock exec "$dir/bin/remote-cli/code" "$@"
+    fi
+fi
+
+set -f
+oldifs=$IFS
+IFS=:
+for d in $PATH; do
+    [ -x "$d/code" ] && [ "$(readlink -f "$d/code")" != "$self" ] && { IFS=$oldifs; set +f; exec "$d/code" "$@"; }
+done
+IFS=$oldifs
+set +f
+
+target=.
+for arg in "$@"; do
+    case $arg in -*) ;; *) target=$arg; break ;; esac
+done
+target=$(readlink -f -- "$target" 2>/dev/null || printf '%s' "$target")
+host=$(hostname)
+cat >&2 <<MSG
+code: no VS Code window is connected to $host right now. Open one from the laptop
+(Remote-SSH), or run there, with $host as the Host of the laptop's SSH config:
+  code --remote ssh-remote+$host '$target'
+MSG
+exit 1
