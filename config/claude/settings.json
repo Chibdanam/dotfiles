@@ -12,7 +12,19 @@
       "Read(./.env.*)",
       "Read(./secrets/**)",
       "Read(./*.pem)",
-      "Read(./*.key)"
+      "Read(./*.key)",
+      "Read(~/.config/zsh/.secrets.zsh)",
+      "Read(~/.gitconfig.local)",
+      "Read(~/.ssh/id_*)",
+      "Read(~/.aws/**)",
+      "Read(~/.azure/**)",
+      "Read(~/.kube/config)",
+      "Read(~/.docker/config.json)",
+      "Read(~/.config/gh/hosts.yml)",
+      "Read(~/.claude/.credentials.json)",
+      "Read(~/.git-credentials)",
+      "Read(~/.netrc)",
+      "Read(~/.gnupg/**)"
     ],
     "ask": [
       "Bash(rm -rf *)",
