@@ -22,10 +22,13 @@ install_node() {
     echo "Installing bun..."
     mise use --global bun@latest
     
-    # Install pnpm via the npm backend; mise's default aqua backend for
-    # pnpm currently looks for an asset name pnpm no longer publishes.
+    # Install pnpm from mise's default backend (the standalone binary). The
+    # npm backend cannot run pnpm 12: its bin shim hands pnpm's native
+    # launcher to node, which fails with a SyntaxError.
     echo "Installing pnpm..."
-    mise use --global npm:pnpm@latest
+    mise use --global pnpm@latest
+    # Machines installed before this change still carry the npm one.
+    mise unuse --global npm:pnpm > /dev/null 2>&1 || true
     
     # tree-sitter CLI is required by nvim-treesitter v1 (main branch)
     # to build parsers from the grammars declared in lua/plugins/treesitter.lua.
